@@ -1,6 +1,6 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
-import { IconChevron, IconDashboard } from "./icons";
+import { IconDashboard } from "./icons";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -26,7 +26,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           )}
         </div>
         <button className="sb-toggle" type="button" onClick={onToggle} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} title={collapsed ? "Expandir menu" : "Recolher menu"}>
-          <IconChevron size={16} className={collapsed ? "rot-180" : undefined} />
+          <span aria-hidden="true">{collapsed ? ">" : "<"}</span>
         </button>
       </div>
 

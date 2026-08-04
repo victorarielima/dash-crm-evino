@@ -109,14 +109,16 @@ button {
 }
 .sb-brand-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 8px 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 8px 18px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 14px;
 }
 .sidebar.is-collapsed .sb-brand-row {
   justify-content: center;
+  align-items: center;
   padding-inline: 0;
 }
 .sb-brand {
@@ -129,14 +131,15 @@ button {
   width: auto;
 }
 .sb-mark {
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
-  border-radius: 14px;
-  box-shadow: 0 8px 22px rgba(20, 24, 30, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(20, 24, 30, 0.12);
 }
 .sb-toggle {
-  margin-left: auto;
+  margin-left: 0;
+  margin-top: 2px;
   width: 30px;
   height: 30px;
   border: 1px solid var(--border);
@@ -148,14 +151,15 @@ button {
   cursor: pointer;
   transition: 0.14s;
   flex: none;
+  font-family: var(--font-cond);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
 }
 .sb-toggle:hover {
   color: var(--text);
   border-color: var(--border-strong);
   background: var(--surface-2);
-}
-.sb-toggle .rot-180 {
-  transform: rotate(180deg);
 }
 .sb-brand-sub {
   font-family: var(--font-cond);
