@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CHANNELS, PERIODS } from "@/lib/catalog";
 import type { AnalyticsResult, ChannelId, MetricKey, PeriodId } from "@/lib/insider/types";
 import { formatValue } from "@/lib/format";
@@ -17,6 +17,7 @@ function todayISO(): string {
 const HERO_KEYS: MetricKey[] = ["revenue", "converted", "bottles"];
 
 export default function Page() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [channel, setChannel] = useState<ChannelId>("email");
   const [period, setPeriod] = useState<PeriodId>("30d");
   const [customStart, setCustomStart] = useState(todayISO());
@@ -27,6 +28,15 @@ export default function Page() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [metric, setMetric] = useState<MetricKey | null>(null);
   const [purchaseMetric, setPurchaseMetric] = useState<MetricKey>("revenue");
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("iacrm-sidebar-collapsed");
+    if (stored !== null) setSidebarCollapsed(stored === "true");
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("iacrm-sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   const missingCustom = (pd: PeriodId) => pd === "custom" && (!customStart || !customEnd);
   const canRun = !missingCustom(period) && !loading;
@@ -67,8 +77,8 @@ export default function Page() {
   const hasData = result?.ok && result.series.length > 0;
 
   return (
-    <div className="app">
-      <Sidebar />
+    <div className={"app" + (sidebarCollapsed ? " is-collapsed" : "")}>
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} />
 
       <main className="main">
         {/* Top bar: abas de canal + período + atualizar */}

@@ -35,7 +35,9 @@ npm run dev            # http://localhost:3000
 
 1. Suba o repo e importe na Vercel (framework detectado: Next.js).
 2. Em **Settings > Environment Variables**, adicione as chaves do `.env.example`.
-3. Deploy. A rota `/api/analytics` roda como Serverless Function (`maxDuration = 60s`).
+3. Em produção, ajuste `AUTH_URL` para a URL pública do site ou remova essa variável para deixar o NextAuth inferir o host.
+4. No Google Cloud Console, adicione a URI de callback do deploy: `https://SEU-DOMINIO/api/auth/callback/google`.
+5. Deploy. A rota `/api/analytics` roda como Serverless Function (`maxDuration = 60s`).
 
 ## Como os dados são montados
 
