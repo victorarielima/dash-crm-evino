@@ -127,39 +127,15 @@ button {
   gap: 10px;
 }
 .sb-brand img {
-  height: 22px;
+  height: 34px;
   width: auto;
 }
 .sb-mark {
-  width: 72px;
-  height: 72px;
+  width: 92px;
+  height: 92px;
   object-fit: contain;
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 10px 26px rgba(20, 24, 30, 0.12);
-}
-.sb-toggle {
-  margin-left: 0;
-  margin-top: 2px;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: 0.14s;
-  flex: none;
-  font-family: var(--font-cond);
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1;
-}
-.sb-toggle:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: var(--surface-2);
 }
 .sb-brand-sub {
   font-family: var(--font-cond);
@@ -177,7 +153,8 @@ button {
   gap: 2px;
 }
 .sidebar.is-collapsed .sb-nav,
-.sidebar.is-collapsed .sb-user {
+.sidebar.is-collapsed .sb-user,
+.sidebar.is-collapsed .sb-footer {
   align-items: center;
 }
 .sb-section {
@@ -244,12 +221,40 @@ button {
   align-items: center;
   gap: 10px;
   padding: 12px 8px 4px;
-  border-top: 1px solid var(--border);
-  margin-top: 10px;
 }
-.sidebar.is-collapsed .sb-user {
+.sb-footer {
+  display: flex;
   flex-direction: column;
-  padding-inline: 0;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.sidebar.is-collapsed .sb-footer {
+  padding-top: 12px;
+}
+.sb-toggle {
+  align-self: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: 0.14s;
+  flex: none;
+  font-family: var(--font-cond);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+.sb-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--surface-2);
 }
 .sb-avatar {
   width: 32px;
