@@ -127,12 +127,15 @@ button {
   gap: 10px;
 }
 .sb-brand img {
-  height: 34px;
+  height: 42px;
   width: auto;
 }
+.sb-wordmark {
+  height: 52px;
+}
 .sb-mark {
-  width: 92px;
-  height: 92px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
   border-radius: 18px;
   box-shadow: 0 10px 26px rgba(20, 24, 30, 0.12);

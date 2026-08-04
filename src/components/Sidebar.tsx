@@ -22,7 +22,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <img className="sb-mark" src="/evino-mark.svg" alt="Evino" />
           ) : (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src="/evino-logo.png" alt="Evino" />
+            <img className="sb-wordmark" src="/evino-wordmark.svg" alt="Evino" />
           )}
         </div>
       </div>
