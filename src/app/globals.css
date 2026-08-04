@@ -484,53 +484,95 @@ button {
   align-items: center;
   gap: 30px;
   flex-wrap: wrap;
+  border: 2px solid #5e1526;
+  transition: all 0.3s ease;
+  z-index: 1;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -18px 34px rgba(0, 0, 0, 0.12),
     0 10px 30px rgba(57, 14, 24, 0.12);
 }
-.hero::before,
-.hero::after {
-  content: "";
+.hero:hover {
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 25px rgba(114, 28, 50, 0.8);
+  border-color: #9c2847;
+}
+
+/* Ondas de vinho (Efeito interativo) */
+.onda-vinho-fundo,
+.onda-vinho-frente {
   position: absolute;
-  inset: auto;
+  width: 800px;
+  height: 800px;
+  border-radius: 42%;
+  z-index: 0;
+  transition: top 0.7s ease;
   pointer-events: none;
 }
-.hero::before {
-  left: -10%;
-  right: -10%;
-  bottom: -8px;
-  height: 42%;
-  background:
-    radial-gradient(ellipse at 18% 88%, rgba(255, 182, 198, 0.18), transparent 22%),
-    radial-gradient(ellipse at 52% 82%, rgba(255, 255, 255, 0.08), transparent 18%),
-    radial-gradient(ellipse at 82% 92%, rgba(255, 173, 191, 0.16), transparent 22%),
-    linear-gradient(180deg, rgba(100, 14, 33, 0.02), rgba(46, 6, 16, 0.52));
-  opacity: 0.95;
-  clip-path: polygon(0 32%, 10% 28%, 18% 34%, 27% 30%, 36% 37%, 46% 31%, 56% 38%, 67% 32%, 76% 39%, 86% 33%, 100% 38%, 100% 100%, 0 100%);
-  animation: wine-waves 8s ease-in-out infinite;
+
+.onda-vinho-fundo {
+  background: #4a101d;
+  top: 70px;
+  animation: girar-onda 12s linear infinite;
 }
-.hero::after {
-  right: -26px;
-  top: -20px;
-  width: 280px;
-  height: 230px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 18%, rgba(255, 255, 255, 0.01) 34%, rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 100%),
-    linear-gradient(180deg, rgba(180, 32, 60, 0.12), rgba(122, 19, 39, 0.32) 34%, rgba(74, 8, 23, 0.8) 72%, rgba(43, 5, 14, 0.96) 100%);
-  clip-path: polygon(42% 0, 58% 0, 58% 12%, 68% 18%, 76% 30%, 82% 46%, 86% 68%, 84% 100%, 16% 100%, 14% 68%, 18% 46%, 24% 30%, 32% 18%, 42% 12%);
-  opacity: 0.95;
-  filter: saturate(1.04);
-  transform: rotate(-3deg);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 18px 24px rgba(255, 255, 255, 0.05),
-    inset 0 -28px 30px rgba(0, 0, 0, 0.16);
+
+.onda-vinho-fundo.wave-left {
+  left: 15%;
+  margin-left: -400px;
 }
+.onda-vinho-fundo.wave-center {
+  left: 50%;
+  margin-left: -400px;
+  animation-duration: 16s;
+  animation-direction: reverse;
+}
+.onda-vinho-fundo.wave-right {
+  left: 85%;
+  margin-left: -400px;
+  animation-duration: 14s;
+}
+
+.onda-vinho-frente {
+  background: #721c32;
+  top: 80px;
+  opacity: 0.9;
+  animation: girar-onda 8s linear infinite;
+}
+
+.onda-vinho-frente.wave-left {
+  left: 15%;
+  margin-left: -400px;
+}
+.onda-vinho-frente.wave-center {
+  left: 50%;
+  margin-left: -400px;
+  animation-duration: 11s;
+  animation-direction: reverse;
+}
+.onda-vinho-frente.wave-right {
+  left: 85%;
+  margin-left: -400px;
+  animation-duration: 10s;
+}
+
+.hero:hover .onda-vinho-fundo {
+  top: -420px;
+}
+
+.hero:hover .onda-vinho-frente {
+  top: -400px;
+}
+
+@keyframes girar-onda {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .hero-main {
   min-width: 220px;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 .hero-label {
   font-family: var(--font-cond);
@@ -555,7 +597,7 @@ button {
   margin-left: auto;
   flex-wrap: wrap;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 .hero-stat {
   min-width: 110px;
@@ -669,20 +711,11 @@ button {
   .kpis {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .hero::after {
-    width: 250px;
-    height: 210px;
-  }
 }
 
 @media (max-width: 720px) {
   .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .hero::after {
-    width: 210px;
-    height: 190px;
-    right: -40px;
   }
 }
 

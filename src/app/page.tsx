@@ -174,6 +174,12 @@ export default function Page() {
               ].filter((s) => s.value !== "—");
               return (
                 <div className="hero">
+                  <div className="onda-vinho-fundo wave-left"></div>
+                  <div className="onda-vinho-fundo wave-center"></div>
+                  <div className="onda-vinho-fundo wave-right"></div>
+                  <div className="onda-vinho-frente wave-left"></div>
+                  <div className="onda-vinho-frente wave-center"></div>
+                  <div className="onda-vinho-frente wave-right"></div>
                   <div className="hero-main">
                     <div className="hero-label">Receita no período</div>
                     <div className="hero-value">{formatValue(k.revenue, "brl")}</div>
