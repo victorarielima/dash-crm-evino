@@ -19,10 +19,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="sb-brand">
           {collapsed ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img className="sb-mark" src="/evino-mark.svg" alt="Evino" />
+            <img className="sb-mark" src="/logo-reduzida.png" alt="Evino" />
           ) : (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img className="sb-wordmark" src="/evino-wordmark.svg" alt="Evino" />
+            <img className="sb-wordmark" src="/evino-logo.png" alt="Evino" style={{ height: 24, width: "auto" }} />
           )}
         </div>
       </div>

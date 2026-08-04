@@ -4,7 +4,7 @@ import { CHANNELS, PERIODS } from "@/lib/catalog";
 import type { AnalyticsResult, ChannelId, MetricKey, PeriodId } from "@/lib/insider/types";
 import { formatValue } from "@/lib/format";
 import Sidebar from "@/components/Sidebar";
-import { IconCalendar, IconRefresh } from "@/components/icons";
+import { IconCalendar } from "@/components/icons";
 import KpiCards from "@/components/KpiCards";
 import TrendChart from "@/components/TrendChart";
 import CampaignTable from "@/components/CampaignTable";
@@ -39,17 +39,21 @@ export default function Page() {
   }, [sidebarCollapsed]);
 
   const missingCustom = (pd: PeriodId) => pd === "custom" && (!customStart || !customEnd);
-  const canRun = !missingCustom(period) && !loading;
 
-  async function run(chArg: ChannelId = channel, pdArg: PeriodId = period) {
-    if (missingCustom(pdArg)) return;
+  async function run(options?: { chArg?: ChannelId; pdArg?: PeriodId; startArg?: string; endArg?: string }) {
+    const chArg = options?.chArg ?? channel;
+    const pdArg = options?.pdArg ?? period;
+    const startArg = options?.startArg ?? customStart;
+    const endArg = options?.endArg ?? customEnd;
+
+    if (pdArg === "custom" && (!startArg || !endArg)) return;
     setLoading(true);
     setFetchError(null);
     try {
       const params = new URLSearchParams({ channel: chArg, period: pdArg });
       if (pdArg === "custom") {
-        params.set("start", customStart);
-        params.set("end", customEnd);
+        params.set("start", startArg);
+        params.set("end", endArg);
       }
       const res = await fetch(`/api/analytics?${params.toString()}`);
       const data: AnalyticsResult = await res.json();
@@ -63,9 +67,30 @@ export default function Page() {
     }
   }
 
+  useEffect(() => {
+    run();
+    // carregamento inicial com os filtros padrão
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function pickChannel(c: ChannelId) {
     setChannel(c);
-    if (result || loading) run(c, period);
+    run({ chArg: c });
+  }
+
+  function pickPeriod(next: PeriodId) {
+    setPeriod(next);
+    run({ pdArg: next });
+  }
+
+  function pickCustomStart(next: string) {
+    setCustomStart(next);
+    if (period === "custom") run({ pdArg: "custom", startArg: next, endArg: customEnd });
+  }
+
+  function pickCustomEnd(next: string) {
+    setCustomEnd(next);
+    if (period === "custom") run({ pdArg: "custom", startArg: customStart, endArg: next });
   }
 
   const activeMetric = useMemo<MetricKey | null>(() => {
@@ -98,7 +123,7 @@ export default function Page() {
           <div className="topbar-actions">
             <div className="period-pick">
               <IconCalendar size={16} />
-              <select value={period} onChange={(e) => setPeriod(e.target.value as PeriodId)} aria-label="Período">
+              <select value={period} onChange={(e) => pickPeriod(e.target.value as PeriodId)} aria-label="Período">
                 {PERIODS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.label}
@@ -106,10 +131,6 @@ export default function Page() {
                 ))}
               </select>
             </div>
-            <button className="refresh" onClick={() => run()} disabled={!canRun}>
-              <IconRefresh size={16} className={loading ? "spin" : undefined} />
-              {loading ? "Atualizando" : "Atualizar"}
-            </button>
           </div>
         </div>
 
@@ -117,11 +138,11 @@ export default function Page() {
           <div className="custom-range">
             <label className="field">
               <span>Início</span>
-              <input type="date" value={customStart} max={todayISO()} onChange={(e) => setCustomStart(e.target.value)} />
+              <input type="date" value={customStart} max={todayISO()} onChange={(e) => pickCustomStart(e.target.value)} />
             </label>
             <label className="field">
               <span>Fim</span>
-              <input type="date" value={customEnd} max={todayISO()} onChange={(e) => setCustomEnd(e.target.value)} />
+              <input type="date" value={customEnd} max={todayISO()} onChange={(e) => pickCustomEnd(e.target.value)} />
             </label>
           </div>
         )}
@@ -170,12 +191,6 @@ export default function Page() {
                 </div>
               );
             })()}
-
-            {result.notes?.map((n, i) => (
-              <div className="note" key={i}>
-                {n}
-              </div>
-            ))}
 
             <KpiCards result={result} exclude={HERO_KEYS} />
 
@@ -246,7 +261,7 @@ export default function Page() {
         {!loading && !result && !fetchError && (
           <div className="empty">
             <b>Selecione canal e período</b>
-            Escolha um canal e um período e clique em Atualizar para carregar os dados.
+            Escolha um canal e um período para carregar os dados automaticamente.
           </div>
         )}
       </main>

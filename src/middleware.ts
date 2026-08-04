@@ -7,6 +7,6 @@ export const { auth: middleware } = NextAuth(authConfig);
 export const config = {
   matcher: [
     // tudo, EXCETO a página de login, as rotas do próprio auth e assets estáticos
-    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|evino-logo.png).*)",
+    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|evino-logo.png|logo-reduzida.png).*)",
   ],
 };

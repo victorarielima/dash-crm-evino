@@ -110,7 +110,7 @@ button {
 .sb-brand-row {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   padding: 4px 8px 18px;
   border-bottom: 1px solid var(--border);
@@ -124,21 +124,25 @@ button {
 .sb-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 .sb-brand img {
-  height: 42px;
+  height: 24px;
   width: auto;
 }
 .sb-wordmark {
-  height: 52px;
+  height: 24px !important;
+  display: block;
+  max-width: 100%;
 }
 .sb-mark {
-  width: 104px;
-  height: 104px;
+  width: 110px;
+  height: 110px;
   object-fit: contain;
-  border-radius: 18px;
-  box-shadow: 0 10px 26px rgba(20, 24, 30, 0.12);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 .sb-brand-sub {
   font-family: var(--font-cond);
@@ -300,10 +304,14 @@ button {
 .topbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  padding: 22px 0 18px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+  margin-bottom: 18px;
   flex-wrap: wrap;
 }
 .topbar h1 {
@@ -318,7 +326,6 @@ button {
   margin-top: 2px;
 }
 .topbar-actions {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -328,8 +335,8 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--r-btn);
   padding: 0 10px;
   height: 40px;
@@ -376,9 +383,8 @@ button {
 /* ---------------- Channel tabs ---------------- */
 .channel-tabs {
   display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 22px;
+  gap: 8px;
+  margin-bottom: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -387,27 +393,29 @@ button {
   display: none;
 }
 .ch-tab {
-  border: 0;
-  background: none;
-  padding: 10px 16px;
-  font-size: 14px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  padding: 0 14px;
+  height: 40px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--text-2);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  border-radius: 999px;
   transition: 0.12s;
 }
 .ch-tab:hover {
-  color: var(--text-2);
+  color: var(--text);
+  background: #eef1f5;
 }
 .ch-tab.on {
-  color: var(--text);
-  border-bottom-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: #f6c9cf;
 }
 .ch-tab .flag {
   font-family: var(--font-cond);
@@ -415,7 +423,8 @@ button {
   font-size: 9px;
   letter-spacing: 0.05em;
   color: var(--muted);
-  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 1px 4px;
 }
@@ -461,7 +470,13 @@ button {
 
 /* ---------------- Hero ---------------- */
 .hero {
-  background: linear-gradient(120deg, var(--hero-1), var(--hero-2));
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 213, 221, 0.16), transparent 20%),
+    radial-gradient(circle at 92% 14%, rgba(255, 176, 194, 0.2), transparent 18%),
+    radial-gradient(circle at 82% 72%, rgba(156, 18, 45, 0.28), transparent 18%),
+    linear-gradient(135deg, #220811 0%, #39111f 30%, #561829 58%, #2a0d17 100%);
   border-radius: var(--r);
   padding: 24px 26px;
   margin-bottom: 22px;
@@ -469,9 +484,53 @@ button {
   align-items: center;
   gap: 30px;
   flex-wrap: wrap;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -18px 34px rgba(0, 0, 0, 0.12),
+    0 10px 30px rgba(57, 14, 24, 0.12);
+}
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+}
+.hero::before {
+  left: -10%;
+  right: -10%;
+  bottom: -8px;
+  height: 42%;
+  background:
+    radial-gradient(ellipse at 18% 88%, rgba(255, 182, 198, 0.18), transparent 22%),
+    radial-gradient(ellipse at 52% 82%, rgba(255, 255, 255, 0.08), transparent 18%),
+    radial-gradient(ellipse at 82% 92%, rgba(255, 173, 191, 0.16), transparent 22%),
+    linear-gradient(180deg, rgba(100, 14, 33, 0.02), rgba(46, 6, 16, 0.52));
+  opacity: 0.95;
+  clip-path: polygon(0 32%, 10% 28%, 18% 34%, 27% 30%, 36% 37%, 46% 31%, 56% 38%, 67% 32%, 76% 39%, 86% 33%, 100% 38%, 100% 100%, 0 100%);
+  animation: wine-waves 8s ease-in-out infinite;
+}
+.hero::after {
+  right: -26px;
+  top: -20px;
+  width: 280px;
+  height: 230px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 18%, rgba(255, 255, 255, 0.01) 34%, rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(180deg, rgba(180, 32, 60, 0.12), rgba(122, 19, 39, 0.32) 34%, rgba(74, 8, 23, 0.8) 72%, rgba(43, 5, 14, 0.96) 100%);
+  clip-path: polygon(42% 0, 58% 0, 58% 12%, 68% 18%, 76% 30%, 82% 46%, 86% 68%, 84% 100%, 16% 100%, 14% 68%, 18% 46%, 24% 30%, 32% 18%, 42% 12%);
+  opacity: 0.95;
+  filter: saturate(1.04);
+  transform: rotate(-3deg);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 18px 24px rgba(255, 255, 255, 0.05),
+    inset 0 -28px 30px rgba(0, 0, 0, 0.16);
 }
 .hero-main {
   min-width: 220px;
+  position: relative;
+  z-index: 1;
 }
 .hero-label {
   font-family: var(--font-cond);
@@ -495,6 +554,8 @@ button {
   gap: 26px;
   margin-left: auto;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 .hero-stat {
   min-width: 110px;
@@ -518,8 +579,8 @@ button {
 /* ---------------- KPI cards ---------------- */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
   margin-bottom: 22px;
 }
 .kpi {
@@ -527,20 +588,21 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--shadow);
-  padding: 15px 16px;
+  padding: 13px 14px;
+  min-width: 0;
 }
 .kpi .lab {
   font-family: var(--font-cond);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .kpi .val {
   font-family: var(--font-num);
   font-weight: 700;
-  font-size: 23px;
+  font-size: 21px;
   line-height: 1;
   color: var(--text);
   letter-spacing: -0.01em;
@@ -601,6 +663,37 @@ button {
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow);
+}
+
+@media (max-width: 1200px) {
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .hero::after {
+    width: 250px;
+    height: 210px;
+  }
+}
+
+@media (max-width: 720px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero::after {
+    width: 210px;
+    height: 190px;
+    right: -40px;
+  }
+}
+
+@keyframes wine-waves {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-2px) scaleY(1.02);
+  }
 }
 
 /* ---------------- Campaign table ---------------- */
