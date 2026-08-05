@@ -475,8 +475,8 @@ button {
   background:
     radial-gradient(circle at 14% 20%, rgba(255, 213, 221, 0.16), transparent 20%),
     radial-gradient(circle at 92% 14%, rgba(255, 176, 194, 0.2), transparent 18%),
-    radial-gradient(circle at 82% 72%, rgba(156, 18, 45, 0.28), transparent 18%),
-    linear-gradient(135deg, #220811 0%, #39111f 30%, #561829 58%, #2a0d17 100%);
+    radial-gradient(circle at 82% 72%, rgba(249, 24, 45, 0.22), transparent 20%),
+    linear-gradient(135deg, #190503 0%, #270D0F 42%, #3a0e18 100%);
   border-radius: var(--r);
   padding: 24px 26px;
   margin-bottom: 22px;
@@ -534,7 +534,7 @@ button {
 }
 
 .onda-vinho-frente {
-  background: #721c32;
+  background: #9c1f38;
   top: 80px;
   opacity: 0.9;
   animation: girar-onda 8s linear infinite;
@@ -626,12 +626,27 @@ button {
   margin-bottom: 22px;
 }
 .kpi {
-  background: var(--surface);
+  background:
+    radial-gradient(120% 90% at 50% -25%, rgba(225, 17, 40, 0.07), transparent 62%),
+    var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(20, 24, 30, 0.04),
+    0 6px 18px rgba(109, 20, 24, 0.06);
   padding: 13px 14px;
   min-width: 0;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  border-color: rgba(225, 17, 40, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 6px rgba(20, 24, 30, 0.06),
+    0 12px 30px rgba(225, 17, 40, 0.18);
 }
 .kpi .lab {
   font-family: var(--font-cond);
@@ -656,12 +671,25 @@ button {
 
 /* ---------------- Cards / charts ---------------- */
 .card {
-  background: var(--surface);
+  background:
+    radial-gradient(90% 60% at 50% -10%, rgba(225, 17, 40, 0.05), transparent 60%),
+    var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(20, 24, 30, 0.04),
+    0 8px 24px rgba(109, 20, 24, 0.06);
   padding: 18px 20px 20px;
   margin-bottom: 22px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card:hover {
+  border-color: rgba(225, 17, 40, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 6px rgba(20, 24, 30, 0.06),
+    0 14px 34px rgba(225, 17, 40, 0.14);
 }
 .card-head {
   display: flex;
