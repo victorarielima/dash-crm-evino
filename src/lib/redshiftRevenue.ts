@@ -85,7 +85,9 @@ export async function revenueByCampaign(channelDb: string, start: Date, end: Dat
     `select lc.utm_campaign camp, ${REV} revenue, ${ORD} orders, ${BOT} bottles ${FROM} ${WHERE} group by 1`,
     params(channelDb, start, end),
   );
+  // Chave normalizada (minúsculo + trim): utm_campaign no Redshift costuma vir
+  // em minúsculas, enquanto o nome da campanha na Insider preserva a caixa.
   const m = new Map<string, RevAgg>();
-  for (const r of rows) if (r.camp) m.set(String(r.camp), { revenue: n(r.revenue), orders: n(r.orders), bottles: n(r.bottles) });
+  for (const r of rows) if (r.camp) m.set(String(r.camp).trim().toLowerCase(), { revenue: n(r.revenue), orders: n(r.orders), bottles: n(r.bottles) });
   return m;
 }

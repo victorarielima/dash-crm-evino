@@ -16,8 +16,8 @@ O usuário escolhe **canal** + **período**, o app consulta a Insider por um pro
 |---|---|---|---|
 | Email | `/email/v2/overall` | `X-INS-AUTH-KEY` | ✅ até 1 ano |
 | SMS | `/analytics/v1/overall` | `X-INS-AUTH-KEY` | ✅ até 1 ano |
-| WhatsApp | Architect `/v1/overall` (`channels[]=whatsapp`) | `Bearer` | ✅ |
-| Web Push | `/v1/statistics/top-metrics` | `Bearer` + `partner_id` string | ✅ (exige chave própria) |
+| WhatsApp | `/v1/statistics/overall` (campanhas, `summary`+`details`) | `x-ins-auth-key` | ✅ até 1 ano |
+| Web Push | `/v1/statistics/overall-metrics` (paginado, por campanha) | `Bearer` + `partner_id` string | ✅ (exige chave própria) |
 | App Push | `get_statistics` | `api_key` no body | ⚠️ só dia atual |
 
 > **Web Push** e **App Push** costumam exigir chaves próprias (`INSIDER_WEBPUSH_API_KEY`

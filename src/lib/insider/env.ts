@@ -1,5 +1,5 @@
 // Leitura centralizada das credenciais Insider (só no servidor).
-// A chave geral cobre Email, SMS e Architect (WhatsApp). Web Push e App Push
+// A chave geral cobre Email, SMS, WhatsApp e Architect. Web Push e App Push
 // costumam exigir chaves próprias — se ausentes, o adapter retorna erro claro.
 
 const base = () => process.env.INSIDER_API_KEY?.trim() || "";
@@ -7,6 +7,7 @@ const base = () => process.env.INSIDER_API_KEY?.trim() || "";
 export const insiderEnv = {
   emailKey: () => process.env.INSIDER_EMAIL_AUTH_KEY?.trim() || base(),
   smsKey: () => process.env.INSIDER_SMS_AUTH_KEY?.trim() || base(),
+  whatsappKey: () => process.env.INSIDER_WHATSAPP_AUTH_KEY?.trim() || base(),
   onsiteKey: () => process.env.INSIDER_ONSITE_AUTH_KEY?.trim() || base(),
   architectKey: () => process.env.INSIDER_ARCHITECT_TOKEN?.trim() || base(),
   // Web Push tem token próprio (Authorization: Bearer <key>); cai na geral se ausente.

@@ -129,9 +129,9 @@ export async function runQuery(
         p.metrics.converted = d?.orders ?? 0;
         p.metrics.bottles = d?.bottles ?? 0;
       }
-      // por campanha (join por utm_campaign == nome da campanha)
+      // por campanha (join por utm_campaign == nome da campanha, case-insensitive)
       for (const c of campaigns) {
-        const r = byCamp.get(c.name);
+        const r = byCamp.get(c.name.trim().toLowerCase());
         c.metrics.revenue = r?.revenue ?? 0;
         c.metrics.converted = r?.orders ?? 0;
         c.metrics.bottles = r?.bottles ?? 0;
