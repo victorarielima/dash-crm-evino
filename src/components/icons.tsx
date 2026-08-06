@@ -80,3 +80,20 @@ export const IconChevron = ({ size, ...p }: P) => (
     <path d="m6 9 6 6 6-6" />
   </svg>
 );
+export const IconAI = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3Z" />
+    <path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" />
+  </svg>
+);
+export const IconPlus = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+export const IconSend = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M22 2 11 13" />
+    <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
+  </svg>
+);

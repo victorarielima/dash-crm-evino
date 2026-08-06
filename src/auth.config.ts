@@ -24,5 +24,10 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth }) {
       return !!auth?.user;
     },
+    // expõe o ID único do Google (token.sub) em session.user.id
+    session({ session, token }) {
+      if (session.user && token.sub) session.user.id = token.sub;
+      return session;
+    },
   },
 };

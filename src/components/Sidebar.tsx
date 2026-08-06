@@ -1,6 +1,8 @@
 "use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { IconDashboard } from "./icons";
+import { IconDashboard, IconAI } from "./icons";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -9,6 +11,7 @@ type SidebarProps = {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const email = session?.user?.email ?? undefined;
   const name = session?.user?.name ?? email?.split("@")[0] ?? "Usuário";
   const initial = (name?.[0] ?? "U").toUpperCase();
@@ -28,12 +31,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       <nav className="sb-nav">
-        <button className="sb-item active">
+        <Link href="/" className={"sb-item" + (pathname === "/" ? " active" : "")}>
           <span className="sb-ic">
             <IconDashboard />
           </span>
           {!collapsed && <span className="sb-label">Dashboard</span>}
-        </button>
+        </Link>
+        <Link href="/chat" className={"sb-item" + (pathname?.startsWith("/chat") ? " active" : "")}>
+          <span className="sb-ic">
+            <IconAI />
+          </span>
+          {!collapsed && <span className="sb-label">IA</span>}
+        </Link>
       </nav>
 
       <div className="sb-footer">
