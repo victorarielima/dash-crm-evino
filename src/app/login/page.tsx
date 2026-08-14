@@ -1,5 +1,5 @@
 import { signIn } from "@/auth";
-import { ALLOWED_DOMAIN } from "@/auth.config";
+import { ALLOWED_DOMAINS } from "@/auth.config";
 
 function GoogleG() {
   return (
@@ -14,6 +14,7 @@ function GoogleG() {
 
 export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
   const denied = searchParams?.error === "AccessDenied";
+  const allowedDomainsText = ALLOWED_DOMAINS.map((domain) => `@${domain}`).join(", ");
   return (
     <div className="login-wrap">
       <div className="login-card">
@@ -21,12 +22,12 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
         <img className="login-logo" src="/evino-logo.png" alt="Evino" />
         <h1 className="login-title">Acesso restrito</h1>
         <p className="login-text">
-          Entre com sua conta corporativa <b>@{ALLOWED_DOMAIN}</b>.
+          Entre com sua conta corporativa <b>{allowedDomainsText}</b>.
         </p>
 
         {denied && (
           <div className="login-error">
-            Esta conta não pertence ao domínio @{ALLOWED_DOMAIN}. Use seu e-mail corporativo.
+            Esta conta não pertence a um dos domínios permitidos ({allowedDomainsText}). Use seu e-mail corporativo.
           </div>
         )}
 

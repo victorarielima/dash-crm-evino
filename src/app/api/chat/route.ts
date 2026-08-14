@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { auth } from "@/auth";
-import { buildContext } from "@/lib/ai/context";
-import { chatComplete, SYSTEM_PROMPT } from "@/lib/ai/openai";
+import { askN8nAgent } from "@/lib/ai/n8n";
 import {
   appendMessage,
   createConversation,
@@ -57,28 +55,18 @@ export async function POST(req: Request) {
       conv = await createConversation(userId, session?.user?.email ?? null, message);
     }
 
-    // 2) contexto de analytics (canal/campanha ou visão geral)
-    const context = await buildContext({
-      channel,
-      period: body.context?.period,
-      campaignName: body.context?.campaignName,
+    // 2) envia tudo ao agente do n8n (que consulta o MCP da Insider).
+    //    A "memória" vai no payload (history) — fonte única na chat_messages.
+    const reply = await askN8nAgent({
+      conversationId: conv.id,
+      userId,
+      userEmail: session?.user?.email ?? null,
+      message,
+      history,
+      context: body.context ?? null,
     });
 
-    // 3) monta o prompt e chama a OpenAI
-    const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "system",
-        content:
-          "Contexto de dados (JSON) para embasar a resposta. Use apenas estes números:\n" +
-          JSON.stringify(context),
-      },
-      ...history.map((m) => ({ role: m.role, content: m.content }) as ChatCompletionMessageParam),
-      { role: "user", content: message },
-    ];
-    const reply = await chatComplete(messages);
-
-    // 4) persiste (usuário + resposta) e atualiza a conversa
+    // 3) persiste (usuário + resposta) e atualiza a conversa
     await appendMessage(conv.id, "user", message, body.context ?? null);
     await appendMessage(conv.id, "assistant", reply);
     await touchConversation(conv.id);

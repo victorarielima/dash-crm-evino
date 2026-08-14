@@ -9,6 +9,7 @@ import KpiCards from "@/components/KpiCards";
 import TrendChart from "@/components/TrendChart";
 import CampaignTable from "@/components/CampaignTable";
 import PerformanceChart from "@/components/PerformanceChart";
+import IspTable from "@/components/IspTable";
 
 function todayISO(): string {
   const d = new Date();
@@ -259,6 +260,19 @@ export default function Page() {
                     </div>
                   );
                 })()}
+
+                {result.channel === "email" && result.isp && result.isp.length > 0 && (
+                  <div className="card">
+                    <div className="card-head">
+                      <h2>Quebra por provedor</h2>
+                    </div>
+                    <IspTable rows={result.isp} />
+                    <div className="note">
+                      Enviados por provedor é estimado (entregues + bounces + bloqueios); conversão não é fornecida por
+                      provedor pela API.
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </>

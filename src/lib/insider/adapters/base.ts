@@ -1,4 +1,4 @@
-import type { CampaignRow, ChannelId, MetricDef, MetricKey, MetricSet } from "../types";
+import type { CampaignRow, ChannelId, IspRow, MetricDef, MetricKey, MetricSet } from "../types";
 
 export interface ChannelAdapter {
   id: ChannelId;
@@ -12,6 +12,8 @@ export interface ChannelAdapter {
   fetchRange(start: Date, end: Date): Promise<MetricSet>;
   /** Lista campanhas do período com indicadores por campanha (opcional). */
   fetchCampaigns?(start: Date, end: Date): Promise<CampaignRow[]>;
+  /** Quebra por provedor de e-mail (ISP) agregada no período (opcional; só Email). */
+  fetchIsp?(start: Date, end: Date): Promise<IspRow[]>;
 }
 
 // Conjuntos de métricas por tipo de card, reaproveitados pelos adapters.
@@ -26,4 +28,6 @@ export const M = {
   cost: { key: "cost", label: "Investimento", format: "brl", kind: "money" } as MetricDef,
   unsubscribed: { key: "unsubscribed", label: "Descadastros", format: "int", kind: "count" } as MetricDef,
   bounced: { key: "bounced", label: "Bounces", format: "int", kind: "count" } as MetricDef,
+  blocked: { key: "blocked", label: "Bloqueios", format: "int", kind: "count" } as MetricDef,
+  spam: { key: "spam", label: "Qtd de SPAM", format: "int", kind: "count" } as MetricDef,
 };

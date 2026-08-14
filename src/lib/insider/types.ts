@@ -14,7 +14,9 @@ export type MetricKey =
   | "bottles"
   | "cost"
   | "unsubscribed"
-  | "bounced";
+  | "bounced"
+  | "blocked"
+  | "spam";
 
 export type MetricSet = Partial<Record<MetricKey, number>>;
 
@@ -50,6 +52,12 @@ export interface HourPoint {
   count: number;
 }
 
+/** Quebra por provedor de e-mail (ISP): gmail, yahoo, hotmail, uol… */
+export interface IspRow {
+  name: string;
+  metrics: MetricSet;
+}
+
 export interface AnalyticsResult {
   channel: ChannelId;
   channelLabel: string;
@@ -62,6 +70,8 @@ export interface AnalyticsResult {
   campaigns: CampaignRow[];
   /** Agregação por hora de envio (0–23). Vazio p/ canais sem horário. */
   hourly: HourPoint[];
+  /** Quebra por provedor (só Email). Ausente/vazio nos demais canais. */
+  isp?: IspRow[];
   notes: string[];
   ok: boolean;
   /** Presente quando ok=false (erro de credencial/limite/etc). */

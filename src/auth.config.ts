@@ -1,24 +1,24 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 
-// Só contas deste domínio corporativo podem entrar.
-export const ALLOWED_DOMAIN = "vissimo.com.br";
+// Só contas destes domínios corporativos podem entrar.
+export const ALLOWED_DOMAINS = ["vissimo.com.br", "evino.com.br", "grandcru.com.br"];
 
 export const authConfig: NextAuthConfig = {
   providers: [
     Google({
-      // `hd` mostra só contas do domínio no seletor do Google (hint de UX);
-      // a validação de verdade é no callback signIn abaixo.
-      authorization: { params: { hd: ALLOWED_DOMAIN, prompt: "select_account" } },
+      // A validação de verdade é no callback signIn abaixo.
+      // Não usamos `hd` porque ele aceita só um domínio.
+      authorization: { params: { prompt: "select_account" } },
     }),
   ],
   pages: { signIn: "/login" },
   callbacks: {
-    // bloqueia login de quem não é do domínio
+    // bloqueia login de quem não é dos domínios permitidos
     signIn({ profile }) {
       const email = (profile?.email ?? "").toLowerCase();
-      const hd = (profile as { hd?: string } | undefined)?.hd;
-      return email.endsWith("@" + ALLOWED_DOMAIN) || hd === ALLOWED_DOMAIN;
+      const hd = (profile as { hd?: string } | undefined)?.hd?.toLowerCase();
+      return ALLOWED_DOMAINS.some((domain) => email.endsWith(`@${domain}`)) || (hd ? ALLOWED_DOMAINS.includes(hd) : false);
     },
     // usado pelo middleware: só passa quem está autenticado
     authorized({ auth }) {

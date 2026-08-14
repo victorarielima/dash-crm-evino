@@ -93,8 +93,11 @@ export async function runQuery(
   const campaignsPromise: Promise<CampaignRow[]> = adapter.fetchCampaigns
     ? adapter.fetchCampaigns(range.start, range.end).catch(() => [])
     : Promise.resolve([]);
+  const ispPromise = adapter.fetchIsp
+    ? adapter.fetchIsp(range.start, range.end).catch(() => [])
+    : Promise.resolve([]);
 
-  const [seriesMetrics, campaigns] = await Promise.all([seriesPromise, campaignsPromise]);
+  const [seriesMetrics, campaigns, isp] = await Promise.all([seriesPromise, campaignsPromise, ispPromise]);
 
   const series = buckets.map((b, i) => ({
     date: b.key,
@@ -147,7 +150,7 @@ export async function runQuery(
     }
   }
 
-  return { ...shell(), bucket: granularity, kpis, series, campaigns, hourly, notes, ok: true };
+  return { ...shell(), bucket: granularity, kpis, series, campaigns, hourly, isp, notes, ok: true };
 }
 
 const METRIC_KEYS: MetricKey[] = [

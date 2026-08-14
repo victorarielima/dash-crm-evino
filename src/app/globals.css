@@ -810,6 +810,19 @@ button {
 }
 .camp-table th.lft {
   text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--surface-2);
+}
+.camp-table td.lft {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+.camp-table tbody tr:hover td.lft {
+  background: var(--surface-2);
 }
 .camp-table th.sortable {
   cursor: pointer;
@@ -845,6 +858,15 @@ button {
 .camp-table td.money {
   color: var(--evino-wine);
   font-weight: 600;
+}
+.camp-table tr.isp-total td {
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border-top: 2px solid var(--border-strong);
+}
+.camp-table tr.isp-total td.lft {
+  background: var(--surface-2);
 }
 .camp-table td.empty-cell {
   text-align: center;
