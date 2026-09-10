@@ -6,8 +6,11 @@ type Col =
   | { label: string; type: "count"; key: MetricKey; format: MetricFormat }
   | { label: string; type: "rate"; num: MetricKey; den: MetricKey };
 
+// A API não devolve envios nem conversões por provedor: "Enviados" é derivado
+// (entregues + bounces + bloqueios) e por isso vem rotulado como estimativa;
+// conversão/receita simplesmente não existem nesse recorte e não têm coluna.
 const ISP_COLS: Col[] = [
-  { label: "Enviados", type: "count", key: "sent", format: "int" },
+  { label: "Enviados (est.)", type: "count", key: "sent", format: "int" },
   { label: "Entregues", type: "count", key: "delivered", format: "int" },
   { label: "% entregues", type: "rate", num: "delivered", den: "sent" },
   { label: "Aberturas", type: "count", key: "opened", format: "int" },
@@ -20,7 +23,8 @@ const ISP_COLS: Col[] = [
   { label: "% bounces", type: "rate", num: "bounced", den: "sent" },
   { label: "Bloqueios", type: "count", key: "blocked", format: "int" },
   { label: "% bloqueios", type: "rate", num: "blocked", den: "sent" },
-  { label: "Taxa de conversão", type: "rate", num: "converted", den: "clicked" },
+  { label: "Qtd de SPAM", type: "count", key: "spam", format: "int" },
+  { label: "% SPAM", type: "rate", num: "spam", den: "delivered" },
 ];
 
 function rate(num?: number, den?: number): number | undefined {
@@ -44,7 +48,7 @@ function providerLabel(name: string): string {
 // soma as métricas de contagem de todos os provedores (linha TOTAL)
 function totals(rows: IspRow[]): MetricSet {
   const t: MetricSet = {};
-  const keys: MetricKey[] = ["sent", "delivered", "opened", "clicked", "unsubscribed", "bounced", "blocked", "converted"];
+  const keys: MetricKey[] = ["sent", "delivered", "opened", "clicked", "unsubscribed", "bounced", "blocked", "spam"];
   for (const k of keys) t[k] = rows.reduce((a, r) => a + (r.metrics[k] ?? 0), 0);
   return t;
 }

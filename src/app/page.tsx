@@ -10,7 +10,6 @@ import KpiCards from "@/components/KpiCards";
 import TrendChart from "@/components/TrendChart";
 import CampaignTable from "@/components/CampaignTable";
 import PerformanceChart from "@/components/PerformanceChart";
-import IspTable from "@/components/IspTable";
 
 function todayISO(): string {
   const d = new Date();
@@ -238,8 +237,9 @@ export default function Page() {
                   <div className="card">
                     <div className="card-head">
                       <h2>Campanhas</h2>
+                      <span className="card-hint">Clique numa campanha para ver o detalhe</span>
                     </div>
-                    <CampaignTable result={result} />
+                    <CampaignTable result={result} period={period} />
                   </div>
                 )}
 
@@ -278,18 +278,6 @@ export default function Page() {
                   );
                 })()}
 
-                {result.channel === "email" && result.isp && result.isp.length > 0 && (
-                  <div className="card">
-                    <div className="card-head">
-                      <h2>Quebra por provedor</h2>
-                    </div>
-                    <IspTable rows={result.isp} />
-                    <div className="note">
-                      Enviados por provedor é estimado (entregues + bounces + bloqueios); conversão não é fornecida por
-                      provedor pela API.
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </>

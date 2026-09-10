@@ -73,6 +73,7 @@ async function fetchOverall(brand: BrandId, start: Date, end: Date): Promise<Ove
       metrics.revenue! += m.revenue ?? 0;
       const send = typeof c.sendDate === "string" && c.sendDate !== "-" ? c.sendDate : c.startDate;
       return {
+        id: c.id != null ? String(c.id) : undefined,
         name: String(c.campName || c.id),
         status: c.statusName || c.type,
         hour: parseHour(send),

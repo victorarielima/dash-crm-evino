@@ -72,6 +72,22 @@ npm run dev            # http://localhost:3000
 Arquitetura: `src/lib/insider/` (adapters por canal + dispatcher), `src/app/api/analytics/` (rota),
 `src/components/` (charts), `src/app/page.tsx` (UI).
 
+## Detalhe da campanha (`/campanha`)
+
+Clicar numa linha da tabela **Campanhas** abre a tela de detalhe daquela campanha
+(`src/app/campanha/` + `src/components/CampaignDetailView.tsx`, servida por `/api/campaign`).
+
+- **Email**: uma chamada a `/email/v2/campaign/statistics?campaignId=&startTime=&endTime=` traz tudo —
+  métricas da campanha, **quebra por provedor**, **cliques por link** e **drops** por motivo.
+  A tabela de provedores mora aqui (saiu do dashboard, onde era um agregado do período).
+- **Outros canais**: as métricas vêm da listagem do período (não há endpoint dedicado); sem quebra
+  por provedor, que só existe em Email.
+- Receita/conversões/garrafas vêm do Redshift, com join por `utm_campaign` = nome da campanha.
+
+> Na quebra por provedor, **Enviados (est.)** é derivado (entregues + bounces + bloqueios): a API não
+> expõe envios por provedor, então o TOTAL não fecha exatamente com o card de Enviados. Conversão e
+> receita não são fornecidas por provedor e por isso não têm coluna.
+
 Conta ativa: `src/lib/brands.ts` (catálogo client-safe: rótulo + logos),
 `src/components/BrandContext.tsx` (estado compartilhado e persistido),
 `src/lib/insider/env.ts` (chaves por conta) e `src/lib/redshiftRevenue.ts` (tabelas por conta).

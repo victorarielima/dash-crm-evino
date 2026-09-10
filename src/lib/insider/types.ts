@@ -41,6 +41,8 @@ export interface DailyPoint {
 }
 
 export interface CampaignRow {
+  /** ID da campanha na Insider — usado para abrir a tela de detalhe. */
+  id?: string;
   name: string;
   status?: string;
   /** Hora de envio (0–23, fuso America/Sao_Paulo). Ausente = sem horário fixo. */
@@ -61,6 +63,44 @@ export interface IspRow {
   metrics: MetricSet;
 }
 
+/** Cliques por link do e-mail (linkClickActivity da Insider). */
+export interface LinkClick {
+  link: string;
+  totalClicks: number;
+  uniqueClicks: number;
+}
+
+/** Motivos de não-envio (drops) reportados pela Insider por campanha. */
+export interface DropRow {
+  label: string;
+  count: number;
+}
+
+/** Detalhe de UMA campanha (tela /campanha). */
+export interface CampaignDetail {
+  brand: BrandId;
+  brandLabel: string;
+  channel: ChannelId;
+  channelLabel: string;
+  campaignId?: string;
+  name: string;
+  status?: string;
+  /** Hora de envio (0–23) quando o canal informa. */
+  hour?: number;
+  range: { start: string; end: string };
+  metrics: MetricDef[];
+  kpis: MetricSet;
+  /** Quebra por provedor — só Email (vem do endpoint de statistics da campanha). */
+  isp: IspRow[];
+  /** Cliques por link — só Email. */
+  links: LinkClick[];
+  /** Drops por motivo — só Email. */
+  drops: DropRow[];
+  notes: string[];
+  ok: boolean;
+  error?: string;
+}
+
 export interface AnalyticsResult {
   brand: BrandId;
   brandLabel: string;
@@ -75,8 +115,6 @@ export interface AnalyticsResult {
   campaigns: CampaignRow[];
   /** Agregação por hora de envio (0–23). Vazio p/ canais sem horário. */
   hourly: HourPoint[];
-  /** Quebra por provedor (só Email). Ausente/vazio nos demais canais. */
-  isp?: IspRow[];
   notes: string[];
   ok: boolean;
   /** Presente quando ok=false (erro de credencial/limite/etc). */

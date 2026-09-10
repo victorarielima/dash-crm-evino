@@ -4,9 +4,13 @@ import { pool } from "./pool";
 import type {
   AnalyticsResult,
   BrandId,
+  CampaignDetail,
   CampaignRow,
   ChannelId,
+  DropRow,
   HourPoint,
+  IspRow,
+  LinkClick,
   MetricKey,
   MetricSet,
   PeriodId,
@@ -20,7 +24,7 @@ import {
   revenueByHour,
   revenueSummary,
 } from "../redshiftRevenue";
-import { emailAdapter } from "./adapters/email";
+import { emailAdapter, emailCampaignStats } from "./adapters/email";
 import { smsAdapter } from "./adapters/sms";
 import { whatsappAdapter } from "./adapters/whatsapp";
 import { webpushAdapter } from "./adapters/webpush";
@@ -107,11 +111,8 @@ export async function runQuery(
   const campaignsPromise: Promise<CampaignRow[]> = adapter.fetchCampaigns
     ? adapter.fetchCampaigns(brand, range.start, range.end).catch(() => [])
     : Promise.resolve([]);
-  const ispPromise = adapter.fetchIsp
-    ? adapter.fetchIsp(brand, range.start, range.end).catch(() => [])
-    : Promise.resolve([]);
 
-  const [seriesMetrics, campaigns, isp] = await Promise.all([seriesPromise, campaignsPromise, ispPromise]);
+  const [seriesMetrics, campaigns] = await Promise.all([seriesPromise, campaignsPromise]);
 
   const series = buckets.map((b, i) => ({
     date: b.key,
@@ -166,7 +167,7 @@ export async function runQuery(
     }
   }
 
-  return { ...shell(), bucket: granularity, kpis, series, campaigns, hourly, isp, notes, ok: true };
+  return { ...shell(), bucket: granularity, kpis, series, campaigns, hourly, notes, ok: true };
 }
 
 const METRIC_KEYS: MetricKey[] = [
@@ -200,3 +201,122 @@ function msg(e: unknown): string {
 
 export { resolveRange };
 export type { DateRange };
+
+// ── Detalhe de UMA campanha (tela /campanha) ───────────────────────────────
+// Email: usa o endpoint dedicado de statistics da campanha (métricas + quebra
+// por provedor + cliques por link + drops). Outros canais: localiza a campanha
+// na listagem do período, que já traz as métricas dela.
+export async function runCampaignDetail(
+  brand: BrandId,
+  channel: ChannelId,
+  opts: {
+    campaignId?: string;
+    name?: string;
+    /** status e hora vêm da tabela do dashboard: evitam re-varrer a listagem. */
+    status?: string;
+    hour?: number;
+    period: PeriodId;
+    customStart?: string;
+    customEnd?: string;
+  },
+): Promise<CampaignDetail> {
+  const adapter = ADAPTERS[channel];
+  if (!adapter) throw new InsiderError(`Canal desconhecido: ${channel}`);
+  const range = resolveRange(opts.period, opts.customStart, opts.customEnd);
+
+  const shell = (name: string): Omit<CampaignDetail, "kpis" | "isp" | "links" | "drops" | "ok"> => ({
+    brand,
+    brandLabel: BRAND_LABEL[brand],
+    channel,
+    channelLabel: adapter.label,
+    campaignId: opts.campaignId,
+    name,
+    range: { start: isoDay(range.start), end: isoDay(range.end) },
+    metrics: adapter.metrics,
+    notes: [],
+  });
+
+  const fail = (name: string, error: string): CampaignDetail => ({
+    ...shell(name),
+    kpis: {},
+    isp: [],
+    links: [],
+    drops: [],
+    ok: false,
+    error,
+  });
+
+  // Email tem endpoint dedicado de statistics → 1 chamada, sem varrer a
+  // listagem (que custa até 50 chamadas). Nos outros canais as métricas da
+  // campanha só existem na listagem do período, então ela é necessária.
+  let row: CampaignRow | undefined;
+  if (channel !== "email" && adapter.fetchCampaigns) {
+    try {
+      const rows = await adapter.fetchCampaigns(brand, range.start, range.end);
+      row =
+        (opts.campaignId ? rows.find((r) => r.id === opts.campaignId) : undefined) ??
+        (opts.name ? rows.find((r) => r.name === opts.name) : undefined);
+    } catch (e: any) {
+      return fail(opts.name || opts.campaignId || "—", msg(e));
+    }
+  }
+
+  const name = row?.name || opts.name || opts.campaignId || "—";
+  const status = row?.status ?? opts.status;
+  const hour = row?.hour ?? opts.hour;
+  const notes: string[] = [];
+  let kpis: MetricSet = { ...(row?.metrics ?? {}) };
+  let isp: IspRow[] = [];
+  let links: LinkClick[] = [];
+  let drops: DropRow[] = [];
+
+  if (channel === "email") {
+    if (!opts.campaignId) return fail(name, "Campanha sem ID: não é possível detalhar.");
+    try {
+      const stats = await emailCampaignStats(brand, opts.campaignId, range.start, range.end);
+      kpis = stats.metrics;
+      isp = stats.isp;
+      links = stats.links;
+      drops = stats.drops;
+      notes.push(
+        "Na quebra por provedor, \"Enviados (est.)\" é derivado (entregues + bounces + bloqueios) — " +
+          "a API não expõe envios por provedor, então o TOTAL da tabela não fecha exatamente com o " +
+          "card de Enviados. Conversão e receita não são fornecidas por provedor.",
+      );
+    } catch (e: any) {
+      return fail(name, msg(e));
+    }
+  } else if (!row) {
+    return fail(name, "Campanha não encontrada no período selecionado.");
+  }
+
+  // Receita/conversões/garrafas reais do Redshift (join por utm_campaign).
+  const rsCh = RS_CHANNEL[channel];
+  const hasRevenue = adapter.metrics.some((m) => m.key === "revenue");
+  if (rsCh && hasRevenue) {
+    try {
+      const byCamp = await revenueByCampaign(brand, rsCh, range.start, range.end);
+      const r = byCamp.get(name.trim().toLowerCase());
+      kpis.revenue = r?.revenue ?? 0;
+      kpis.converted = r?.orders ?? 0;
+      kpis.bottles = r?.bottles ?? 0;
+      if (!r) notes.push("Sem pedidos atribuídos a esta campanha no período (join por utm_campaign).");
+      const brandNote = brandRevenueNote(brand);
+      if (brandNote) notes.push(brandNote);
+    } catch (e) {
+      notes.push("Redshift indisponível — receita/conversões mantidas da Insider. " + msg(e));
+    }
+  }
+
+  return {
+    ...shell(name),
+    status,
+    hour,
+    kpis,
+    isp,
+    links,
+    drops,
+    notes,
+    ok: true,
+  };
+}

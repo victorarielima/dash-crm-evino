@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { AnalyticsResult, MetricFormat, MetricKey, MetricSet } from "@/lib/insider/types";
+import { useRouter } from "next/navigation";
+import type { AnalyticsResult, CampaignRow, MetricFormat, MetricKey, MetricSet, PeriodId } from "@/lib/insider/types";
 import { formatValue } from "@/lib/format";
 
 // Coluna: contagem (uma métrica) ou taxa derivada (num/den).
@@ -47,7 +48,8 @@ function colDisplay(col: Col, m: MetricSet): string {
   return col.type === "count" ? formatValue(v, col.format) : formatPct(v);
 }
 
-export default function CampaignTable({ result }: { result: AnalyticsResult }) {
+export default function CampaignTable({ result, period }: { result: AnalyticsResult; period: PeriodId }) {
+  const router = useRouter();
   const [filter, setFilter] = useState("");
   const [sortId, setSortId] = useState<string>(result.primary);
   const [dir, setDir] = useState<"asc" | "desc">("desc");
@@ -88,6 +90,28 @@ export default function CampaignTable({ result }: { result: AnalyticsResult }) {
   }
   const arrow = (id: string) => (id === sortId ? (dir === "asc" ? " ▲" : " ▼") : "");
 
+  // Email é o único canal com endpoint de detalhe por campanha (exige o ID).
+  const canOpen = (r: CampaignRow) => result.channel !== "email" || !!r.id;
+
+  function openCampaign(r: CampaignRow) {
+    if (!canOpen(r)) return;
+    const params = new URLSearchParams({
+      brand: result.brand,
+      channel: result.channel,
+      period,
+      name: r.name,
+    });
+    if (r.id) params.set("id", r.id);
+    // status/hora vêm da linha: poupam uma varredura da listagem no detalhe
+    if (r.status) params.set("status", r.status);
+    if (typeof r.hour === "number") params.set("hour", String(r.hour));
+    if (period === "custom") {
+      params.set("start", result.range.start);
+      params.set("end", result.range.end);
+    }
+    router.push(`/campanha?${params.toString()}`);
+  }
+
   return (
     <div>
       <div className="tbl-toolbar">
@@ -116,7 +140,20 @@ export default function CampaignTable({ result }: { result: AnalyticsResult }) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={i}>
+              <tr
+                key={i}
+                className={canOpen(r) ? "row-link" : undefined}
+                onClick={() => openCampaign(r)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openCampaign(r);
+                  }
+                }}
+                tabIndex={canOpen(r) ? 0 : undefined}
+                role={canOpen(r) ? "link" : undefined}
+                title={canOpen(r) ? `Ver detalhe de ${r.name}` : "Campanha sem ID: sem detalhe disponível"}
+              >
                 <td className="lft name" title={r.name}>
                   {r.name}
                 </td>

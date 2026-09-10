@@ -39,6 +39,7 @@ async function fetchOverall(brand: BrandId, start: Date, end: Date): Promise<Ove
     const summary = (pick(json, "summary") as any) || {};
     const details = (pick(json, "details") as any[]) || [];
     const rows: CampaignRow[] = details.map((c) => ({
+      id: c.id != null ? String(c.id) : undefined,
       name: String(c.campName || c.id),
       status: c.status,
       hour: typeof c.startsOn === "number" ? hourOfEpoch(c.startsOn) : undefined,

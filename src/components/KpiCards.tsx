@@ -1,5 +1,5 @@
 "use client";
-import type { AnalyticsResult, MetricKey, MetricSet } from "@/lib/insider/types";
+import type { ChannelId, MetricDef, MetricKey, MetricSet } from "@/lib/insider/types";
 import { formatValue } from "@/lib/format";
 
 function rate(num?: number, den?: number): number | undefined {
@@ -54,7 +54,14 @@ function emailCards(k: MetricSet): Card[] {
   });
 }
 
-function genericCards(result: AnalyticsResult, exclude: MetricKey[]): Card[] {
+/** Fonte mínima dos cards — atendida tanto por AnalyticsResult quanto por CampaignDetail. */
+interface KpiSource {
+  channel: ChannelId;
+  metrics: MetricDef[];
+  kpis: MetricSet;
+}
+
+function genericCards(result: KpiSource, exclude: MetricKey[]): Card[] {
   const k = result.kpis;
   const cards: Card[] = result.metrics
     .filter((m) => k[m.key] != null && !exclude.includes(m.key))
@@ -74,7 +81,7 @@ function genericCards(result: AnalyticsResult, exclude: MetricKey[]): Card[] {
   return cards;
 }
 
-export default function KpiCards({ result, exclude = [] }: { result: AnalyticsResult; exclude?: MetricKey[] }) {
+export default function KpiCards({ result, exclude = [] }: { result: KpiSource; exclude?: MetricKey[] }) {
   const cards = result.channel === "email" ? emailCards(result.kpis) : genericCards(result, exclude);
   if (cards.length === 0) return null;
 

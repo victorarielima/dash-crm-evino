@@ -41,6 +41,7 @@ export const smsAdapter: ChannelAdapter = {
     const json = await overall(brand, start, end);
     const detail: any[] = (pick(json, "detail") as any[]) || [];
     return detail.map((d) => ({
+      id: d.campaignId != null ? String(d.campaignId) : undefined,
       name: String(d.campaignName || d.campaignId || "—"),
       status: d.status,
       hour: d.startTime ? hourOfEpoch(num(d.startTime)) : undefined,
