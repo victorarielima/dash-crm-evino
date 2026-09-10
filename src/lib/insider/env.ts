@@ -1,7 +1,8 @@
 // Leitura centralizada das credenciais Insider (só no servidor), por marca.
 // Cada marca (Evino / Grand Cru) é uma conta Insider distinta, com seu próprio
-// conjunto de variáveis: a chave geral cobre Email, SMS, WhatsApp e Architect;
-// Web Push e App Push exigem chaves próprias.
+// conjunto de variáveis. **Uma única chave geral atende todos os canais** — as
+// variáveis por canal são overrides, só necessárias se a conta emitir um token
+// exclusivo para aquele canal.
 //
 // NÃO existe fallback entre marcas — se a chave da Grand Cru não estiver
 // configurada, o adapter falha com mensagem clara em vez de devolver dados da
@@ -52,15 +53,6 @@ const VARS: Record<BrandId, BrandVars> = {
 
 const read = (name: string): string => process.env[name]?.trim() || "";
 
-/** Valor da variável específica do canal ou, se vazia, da chave geral da marca. */
-function keyOf(brand: BrandId, field: keyof BrandVars): { value: string; varName: string } {
-  const vars = VARS[brand];
-  const own = read(vars[field]);
-  if (own) return { value: own, varName: vars[field] };
-  const base = read(vars.base);
-  return { value: base, varName: `${vars[field]} (ou ${vars.base})` };
-}
-
 export class InsiderError extends Error {
   constructor(message: string) {
     super(message);
@@ -68,28 +60,45 @@ export class InsiderError extends Error {
   }
 }
 
-function required(brand: BrandId, field: keyof BrandVars, withFallback: boolean): string {
-  const { value, varName } = withFallback
-    ? keyOf(brand, field)
-    : { value: read(VARS[brand][field]), varName: VARS[brand][field] };
-  if (!value) {
-    throw new InsiderError(
-      `Conta ${BRAND_LABEL[brand]} sem credencial da Insider configurada: defina ${varName} no ambiente.`,
-    );
-  }
-  return value;
+/**
+ * Chave de um canal: usa a variável específica se existir, senão a chave geral
+ * da conta. Só falha quando as duas estão vazias.
+ */
+function channelKey(brand: BrandId, field: keyof BrandVars): string {
+  const vars = VARS[brand];
+  const own = read(vars[field]);
+  if (own) return own;
+  const base = read(vars.base);
+  if (base) return base;
+  throw new InsiderError(
+    `Conta ${BRAND_LABEL[brand]} sem chave da Insider: preencha ${vars.base} no .env ` +
+      `(a mesma chave atende todos os canais) e reinicie o servidor — o Next lê o .env ` +
+      `apenas ao subir. Se esta conta emitir um token exclusivo deste canal, use ${vars[field]}.`,
+  );
 }
 
 export const insiderEnv = {
-  emailKey: (brand: BrandId) => required(brand, "email", true),
-  smsKey: (brand: BrandId) => required(brand, "sms", true),
-  whatsappKey: (brand: BrandId) => required(brand, "whatsapp", true),
-  onsiteKey: (brand: BrandId) => required(brand, "onsite", true),
-  architectKey: (brand: BrandId) => required(brand, "architect", true),
+  emailKey: (brand: BrandId) => channelKey(brand, "email"),
+  smsKey: (brand: BrandId) => channelKey(brand, "sms"),
+  whatsappKey: (brand: BrandId) => channelKey(brand, "whatsapp"),
+  onsiteKey: (brand: BrandId) => channelKey(brand, "onsite"),
+  architectKey: (brand: BrandId) => channelKey(brand, "architect"),
   // Web Push tem token próprio (Authorization: Bearer <key>); cai na geral se ausente.
-  webpushKey: (brand: BrandId) => required(brand, "webpush", true),
-  // App Push usa a chave do projeto MOBILE — sem fallback para a chave geral.
-  mobileKey: (brand: BrandId) => required(brand, "mobile", false),
-  webpushPartnerId: (brand: BrandId) => required(brand, "webpushPartnerId", false),
+  webpushKey: (brand: BrandId) => channelKey(brand, "webpush"),
+  // App Push costuma ter chave do projeto MOBILE, mas também cai na geral: se a
+  // conta usar a mesma chave, funciona; se não, a própria Insider responde
+  // "Bad Api Key" e o aviso aparece no canal.
+  mobileKey: (brand: BrandId) => channelKey(brand, "mobile"),
+  /** partner_id do Web Push: identificador da conta, NÃO uma chave — sem fallback. */
+  webpushPartnerId: (brand: BrandId): string => {
+    const vars = VARS[brand];
+    const v = read(vars.webpushPartnerId);
+    if (v) return v;
+    throw new InsiderError(
+      `Web Push da conta ${BRAND_LABEL[brand]}: falta ${vars.webpushPartnerId}. ` +
+        `Não é uma chave de API — é o partner_id (ID numérico da conta no InOne, ` +
+        `como o 10014458 da Evino) que a API do Web Push exige no corpo da requisição.`,
+    );
+  },
   partnerName: (brand: BrandId) => read(VARS[brand].partnerName),
 };

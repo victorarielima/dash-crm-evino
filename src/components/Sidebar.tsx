@@ -1,9 +1,9 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { BRANDS } from "@/lib/brands";
-import type { BrandId } from "@/lib/insider/types";
 import { useBrand } from "./BrandContext";
 import { IconDashboard, IconAI } from "./icons";
 
@@ -20,40 +20,84 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const name = session?.user?.name ?? email?.split("@")[0] ?? "Usuário";
   const initial = (name?.[0] ?? "U").toUpperCase();
 
+  // Seletor de conta: a própria logo é o botão e abre as logos para escolher.
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [accountOpen]);
+
   return (
     <aside className={"sidebar" + (collapsed ? " is-collapsed" : "")}>
       <div className="sb-brand-row">
-        <div className="sb-brand">
-          {collapsed ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img className="sb-mark" src={brandInfo.mark} alt={brandInfo.label} />
-          ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              className="sb-wordmark"
-              src={brandInfo.wordmark}
-              alt={brandInfo.label}
-              style={{ height: 24, width: "auto" }}
-            />
+        <div className="sb-brand" ref={accountRef}>
+          {/* A logo da conta ativa é o botão; abre as logos para trocar de conta. */}
+          <button
+            type="button"
+            className={"sb-brand-btn" + (accountOpen ? " is-open" : "")}
+            onClick={() => setAccountOpen((o) => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={accountOpen}
+            aria-label={`Conta ${brandInfo.label}. Clique para trocar de conta.`}
+            title={`Conta: ${brandInfo.label} — clique para trocar`}
+          >
+            {collapsed ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img className="sb-mark" src={brandInfo.mark} alt={brandInfo.label} />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img className="sb-wordmark" src={brandInfo.wordmark} alt={brandInfo.label} />
+            )}
+            <span className="sb-brand-caret" aria-hidden="true">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+
+          {accountOpen && (
+            <div className="sb-brand-pop" role="listbox" aria-label="Conta">
+              {BRANDS.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  role="option"
+                  aria-selected={b.id === brand}
+                  className={"sb-brand-opt" + (b.id === brand ? " on" : "")}
+                  onClick={() => {
+                    setBrand(b.id);
+                    setAccountOpen(false);
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={b.wordmark} alt={b.label} />
+                </button>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Seletor de conta: troca a logo e a conta Insider/Redshift consultada. */}
-        <label className={"sb-account" + (collapsed ? " is-collapsed" : "")}>
-          <span className="sr-only">Conta</span>
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value as BrandId)}
-            aria-label="Conta"
-            title={`Conta: ${brandInfo.label}`}
-          >
-            {BRANDS.map((b) => (
-              <option key={b.id} value={b.id}>
-                {collapsed ? b.short : b.label}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
 
       <nav className="sb-nav">
