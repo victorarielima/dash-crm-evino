@@ -1,4 +1,4 @@
-import { insiderEnv, InsiderError } from "../env";
+import { insiderEnv } from "../env";
 import { insiderFetch, num, pick } from "../http";
 import type { MetricSet } from "../types";
 import { M, type ChannelAdapter } from "./base";
@@ -6,7 +6,8 @@ import { M, type ChannelAdapter } from "./base";
 const URL = "https://mobile.useinsider.com/api/v1/notification/get_statistics";
 
 // get_statistics só cobre o dia atual (00:00 → agora) e exige a api_key do
-// projeto MOBILE (INSIDER_MOBILE_API_KEY), diferente da chave de analytics.
+// projeto MOBILE (INSIDER_MOBILE_API_KEY / INSIDER_GC_MOBILE_API_KEY),
+// diferente da chave de analytics.
 export const apppushAdapter: ChannelAdapter = {
   id: "apppush",
   label: "App Push",
@@ -15,11 +16,10 @@ export const apppushAdapter: ChannelAdapter = {
   primary: "delivered",
   supportsHistory: false,
   note: "A API do App Push só retorna dados do dia atual (entregas e sessões; sem receita). Histórico exige export assíncrono (não incluído).",
-  async fetchRange(): Promise<MetricSet> {
-    const key = insiderEnv.mobileKey();
-    if (!key) throw new InsiderError("INSIDER_MOBILE_API_KEY não configurado (chave do projeto Mobile).");
+  async fetchRange(brand): Promise<MetricSet> {
+    const key = insiderEnv.mobileKey(brand);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    const partner = insiderEnv.partnerName();
+    const partner = insiderEnv.partnerName(brand);
     if (partner) headers["X-PARTNER-NAME"] = partner.toLowerCase();
     const json = await insiderFetch(URL, {
       method: "POST",

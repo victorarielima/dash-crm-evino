@@ -2,7 +2,7 @@ import { insiderEnv } from "../env";
 import { epochSec, hourOfEpoch } from "../periods";
 import { pool } from "../pool";
 import { insiderFetch, num, pick } from "../http";
-import type { CampaignRow, IspRow, MetricSet } from "../types";
+import type { BrandId, CampaignRow, IspRow, MetricSet } from "../types";
 import { M, type ChannelAdapter } from "./base";
 
 const BASE = "https://analytics.api.useinsider.com";
@@ -51,13 +51,13 @@ type EmailAll = { rows: CampaignRow[]; isp: IspRow[] };
 const cache = new Map<string, { t: number; p: Promise<EmailAll> }>();
 const TTL = 60_000;
 
-async function fetchAll(start: Date, end: Date): Promise<EmailAll> {
-  const key = `${start.getTime()}-${end.getTime()}`;
+async function fetchAll(brand: BrandId, start: Date, end: Date): Promise<EmailAll> {
+  const key = `${brand}-${start.getTime()}-${end.getTime()}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.t < TTL) return hit.p;
 
   const p = (async (): Promise<EmailAll> => {
-    const keyAuth = insiderEnv.emailKey();
+    const keyAuth = insiderEnv.emailKey(brand);
     const inRange: { id: number; name: string; type?: string; launch: Date; hour: number }[] = [];
     for (let page = 1; page <= MAX_PAGES; page++) {
       const url = `${BASE}/email/v2/campaign/list?page=${page}&perPage=100`;
@@ -146,16 +146,16 @@ export const emailAdapter: ChannelAdapter = {
   metrics: [M.sent, M.delivered, M.opened, M.clicked, M.converted, M.revenue, M.bottles, M.unsubscribed, M.bounced, M.blocked, M.spam],
   primary: "revenue",
   supportsHistory: true,
-  async fetchRange(start, end): Promise<MetricSet> {
+  async fetchRange(brand, start, end): Promise<MetricSet> {
     const url = `${BASE}/email/v2/overall?startTime=${epochSec(start)}&endTime=${epochSec(end)}`;
-    const json = await insiderFetch(url, { headers: { "X-INS-AUTH-KEY": insiderEnv.emailKey() } });
+    const json = await insiderFetch(url, { headers: { "X-INS-AUTH-KEY": insiderEnv.emailKey(brand) } });
     const s = pick(json, "data.summary", "summary") as any;
     return s ? summaryToMetrics(s) : {};
   },
-  async fetchCampaigns(start, end): Promise<CampaignRow[]> {
-    return (await fetchAll(start, end)).rows;
+  async fetchCampaigns(brand, start, end): Promise<CampaignRow[]> {
+    return (await fetchAll(brand, start, end)).rows;
   },
-  async fetchIsp(start, end): Promise<IspRow[]> {
-    return (await fetchAll(start, end)).isp;
+  async fetchIsp(brand, start, end): Promise<IspRow[]> {
+    return (await fetchAll(brand, start, end)).isp;
   },
 };

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "CRM Digital Evino · Dashboard Insider",
+  title: "CRM Digital · Dashboard Insider",
   description: "Analytics multicanal integrado à Insider One.",
 };
 

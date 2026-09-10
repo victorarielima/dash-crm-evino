@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { CHANNELS, PERIODS } from "@/lib/catalog";
-import type { AnalyticsResult, ChannelId, MetricKey, PeriodId } from "@/lib/insider/types";
+import type { AnalyticsResult, BrandId, ChannelId, MetricKey, PeriodId } from "@/lib/insider/types";
 import { formatValue } from "@/lib/format";
 import Sidebar from "@/components/Sidebar";
+import { useBrand } from "@/components/BrandContext";
 import { IconCalendar } from "@/components/icons";
 import KpiCards from "@/components/KpiCards";
 import TrendChart from "@/components/TrendChart";
@@ -18,6 +19,7 @@ function todayISO(): string {
 const HERO_KEYS: MetricKey[] = ["revenue", "converted", "bottles"];
 
 export default function Page() {
+  const { brand, ready: brandReady } = useBrand();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [channel, setChannel] = useState<ChannelId>("email");
   const [period, setPeriod] = useState<PeriodId>("30d");
@@ -41,7 +43,14 @@ export default function Page() {
 
   const missingCustom = (pd: PeriodId) => pd === "custom" && (!customStart || !customEnd);
 
-  async function run(options?: { chArg?: ChannelId; pdArg?: PeriodId; startArg?: string; endArg?: string }) {
+  async function run(options?: {
+    brandArg?: BrandId;
+    chArg?: ChannelId;
+    pdArg?: PeriodId;
+    startArg?: string;
+    endArg?: string;
+  }) {
+    const brandArg = options?.brandArg ?? brand;
     const chArg = options?.chArg ?? channel;
     const pdArg = options?.pdArg ?? period;
     const startArg = options?.startArg ?? customStart;
@@ -51,7 +60,7 @@ export default function Page() {
     setLoading(true);
     setFetchError(null);
     try {
-      const params = new URLSearchParams({ channel: chArg, period: pdArg });
+      const params = new URLSearchParams({ brand: brandArg, channel: chArg, period: pdArg });
       if (pdArg === "custom") {
         params.set("start", startArg);
         params.set("end", endArg);
@@ -68,11 +77,12 @@ export default function Page() {
     }
   }
 
+  // Carregamento inicial (após ler a conta salva) e recarga a cada troca de conta.
   useEffect(() => {
-    run();
-    // carregamento inicial com os filtros padrão
+    if (!brandReady) return;
+    run({ brandArg: brand });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [brandReady, brand]);
 
   function pickChannel(c: ChannelId) {
     setChannel(c);
@@ -200,6 +210,13 @@ export default function Page() {
             })()}
 
             <KpiCards result={result} exclude={HERO_KEYS} />
+
+            {/* Ressalvas do canal/conta (limitações de API, agregação, garrafas na GC…) */}
+            {result.notes.map((n, i) => (
+              <div className="note" key={i}>
+                {n}
+              </div>
+            ))}
 
             {hasData && activeMetric && (
               <>

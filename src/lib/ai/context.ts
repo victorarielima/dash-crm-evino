@@ -3,7 +3,8 @@
 // serão enviados ao modelo como contexto do sistema.
 import { runQuery } from "@/lib/insider";
 import { CHANNELS } from "@/lib/catalog";
-import type { AnalyticsResult, ChannelId, PeriodId } from "@/lib/insider/types";
+import { DEFAULT_BRAND } from "@/lib/brands";
+import type { AnalyticsResult, BrandId, ChannelId, PeriodId } from "@/lib/insider/types";
 
 function topCampaigns(r: AnalyticsResult, n = 12) {
   return [...r.campaigns]
@@ -21,6 +22,7 @@ function topHours(r: AnalyticsResult, n = 5) {
 }
 
 export interface ChatContextInput {
+  brand?: BrandId;
   channel?: ChannelId;
   period?: PeriodId;
   campaignName?: string;
@@ -28,13 +30,15 @@ export interface ChatContextInput {
 
 /** Contexto de UM canal (opcionalmente focado numa campanha). */
 export async function buildChannelContext(
+  brand: BrandId,
   channel: ChannelId,
   period: PeriodId,
   campaignName?: string,
 ) {
-  const r = await runQuery(channel, period);
+  const r = await runQuery(brand, channel, period);
   const ctx: Record<string, unknown> = {
     tipo: "canal",
+    conta: r.brandLabel,
     canal: r.channelLabel,
     periodo: r.range,
     kpis: r.kpis,
@@ -52,23 +56,24 @@ export async function buildChannelContext(
 }
 
 /** Visão geral: KPIs de todos os canais no período (análise sem campanha específica). */
-export async function buildOverviewContext(period: PeriodId) {
+export async function buildOverviewContext(brand: BrandId, period: PeriodId) {
   const ids = CHANNELS.map((c) => c.id);
   const canais = await Promise.all(
     ids.map(async (id) => {
       try {
-        const r = await runQuery(id, period);
+        const r = await runQuery(brand, id, period);
         return { canal: r.channelLabel, periodo: r.range, kpis: r.kpis, top_campanhas: topCampaigns(r, 5) };
       } catch (e: any) {
         return { canal: id, erro: e?.message || String(e) };
       }
     }),
   );
-  return { tipo: "geral", periodo: period, canais };
+  return { tipo: "geral", conta: brand, periodo: period, canais };
 }
 
 export async function buildContext(input: ChatContextInput) {
   const period = input.period ?? "30d";
-  if (input.channel) return buildChannelContext(input.channel, period, input.campaignName);
-  return buildOverviewContext(period);
+  const brand = input.brand ?? DEFAULT_BRAND;
+  if (input.channel) return buildChannelContext(brand, input.channel, period, input.campaignName);
+  return buildOverviewContext(brand, period);
 }

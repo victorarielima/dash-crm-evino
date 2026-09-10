@@ -1,9 +1,20 @@
 import { InsiderError } from "./env";
 import { dayCount, isoDay, resolveRange, splitBuckets, type DateRange } from "./periods";
 import { pool } from "./pool";
-import type { AnalyticsResult, CampaignRow, ChannelId, HourPoint, MetricKey, MetricSet, PeriodId } from "./types";
+import type {
+  AnalyticsResult,
+  BrandId,
+  CampaignRow,
+  ChannelId,
+  HourPoint,
+  MetricKey,
+  MetricSet,
+  PeriodId,
+} from "./types";
+import { BRAND_LABEL } from "../brands";
 import {
   RS_CHANNEL,
+  brandRevenueNote,
   revenueByCampaign,
   revenueByDay,
   revenueByHour,
@@ -30,6 +41,7 @@ const CONCURRENCY: Partial<Record<ChannelId, number>> = {
 };
 
 export async function runQuery(
+  brand: BrandId,
   channel: ChannelId,
   period: PeriodId,
   customStart?: string,
@@ -40,6 +52,8 @@ export async function runQuery(
   const range = resolveRange(period, customStart, customEnd);
 
   const shell = (): Omit<AnalyticsResult, "kpis" | "series" | "ok" | "campaigns" | "hourly"> => ({
+    brand,
+    brandLabel: BRAND_LABEL[brand],
     channel,
     channelLabel: adapter.label,
     range: { start: isoDay(range.start), end: isoDay(range.end) },
@@ -54,7 +68,7 @@ export async function runQuery(
     const notes = adapter.note ? [adapter.note] : [];
     if (period !== "today") notes.push("Período ignorado: este canal só expõe o dia atual.");
     try {
-      const m = await adapter.fetchRange(range.start, range.end);
+      const m = await adapter.fetchRange(brand, range.start, range.end);
       const today = isoDay(new Date());
       return {
         ...shell(),
@@ -74,7 +88,7 @@ export async function runQuery(
   // Canais com histórico: KPIs = 1 chamada de range; série = fan-out por bucket.
   let kpis;
   try {
-    kpis = await adapter.fetchRange(range.start, range.end);
+    kpis = await adapter.fetchRange(brand, range.start, range.end);
   } catch (e: any) {
     return { ...shell(), kpis: {}, series: [], campaigns: [], hourly: [], ok: false, error: msg(e) };
   }
@@ -85,16 +99,16 @@ export async function runQuery(
   // série (fan-out por bucket) e campanhas rodam em paralelo
   const seriesPromise = pool(buckets, conc, async (b) => {
     try {
-      return await adapter.fetchRange(b.start, b.end);
+      return await adapter.fetchRange(brand, b.start, b.end);
     } catch {
       return {}; // lacuna pontual não derruba o período
     }
   });
   const campaignsPromise: Promise<CampaignRow[]> = adapter.fetchCampaigns
-    ? adapter.fetchCampaigns(range.start, range.end).catch(() => [])
+    ? adapter.fetchCampaigns(brand, range.start, range.end).catch(() => [])
     : Promise.resolve([]);
   const ispPromise = adapter.fetchIsp
-    ? adapter.fetchIsp(range.start, range.end).catch(() => [])
+    ? adapter.fetchIsp(brand, range.start, range.end).catch(() => [])
     : Promise.resolve([]);
 
   const [seriesMetrics, campaigns, isp] = await Promise.all([seriesPromise, campaignsPromise, ispPromise]);
@@ -116,10 +130,10 @@ export async function runQuery(
   if (rsCh && hasRevenue) {
     try {
       const [sum, byDay, byHour, byCamp] = await Promise.all([
-        revenueSummary(rsCh, range.start, range.end),
-        revenueByDay(rsCh, range.start, range.end),
-        revenueByHour(rsCh, range.start, range.end),
-        revenueByCampaign(rsCh, range.start, range.end),
+        revenueSummary(brand, rsCh, range.start, range.end),
+        revenueByDay(brand, rsCh, range.start, range.end),
+        revenueByHour(brand, rsCh, range.start, range.end),
+        revenueByCampaign(brand, rsCh, range.start, range.end),
       ]);
       // KPIs
       kpis.revenue = sum.revenue;
@@ -145,6 +159,8 @@ export async function runQuery(
         count: 0,
         metrics: { revenue: h.revenue, converted: h.orders, bottles: h.bottles },
       }));
+      const brandNote = brandRevenueNote(brand);
+      if (brandNote) notes.push(brandNote);
     } catch (e) {
       notes.push("Redshift indisponível — receita/conversões mantidas da Insider. " + msg(e));
     }

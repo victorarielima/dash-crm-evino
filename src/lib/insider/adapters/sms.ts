@@ -1,17 +1,17 @@
 import { insiderEnv } from "../env";
 import { epochSec, hourOfEpoch } from "../periods";
 import { insiderFetch, num, pick } from "../http";
-import type { CampaignRow, MetricSet } from "../types";
+import type { BrandId, CampaignRow, MetricSet } from "../types";
 import { M, type ChannelAdapter } from "./base";
 
 const BASE = "https://sms.useinsider.com/analytics";
 
-async function overall(start: Date, end: Date): Promise<any> {
+async function overall(brand: BrandId, start: Date, end: Date): Promise<any> {
   const cap = Math.min(epochSec(end), epochSec(new Date())) - 1;
   const body = JSON.stringify({ startTime: epochSec(start), endTime: cap });
   return insiderFetch(`${BASE}/v1/overall`, {
     method: "POST",
-    headers: { "X-INS-AUTH-KEY": insiderEnv.smsKey(), "Content-Type": "application/json" },
+    headers: { "X-INS-AUTH-KEY": insiderEnv.smsKey(brand), "Content-Type": "application/json" },
     body,
   });
 }
@@ -22,8 +22,8 @@ export const smsAdapter: ChannelAdapter = {
   metrics: [M.sent, M.delivered, M.clicked, M.converted, M.revenue, M.bottles, M.unsubscribed],
   primary: "revenue",
   supportsHistory: true,
-  async fetchRange(start, end): Promise<MetricSet> {
-    const json = await overall(start, end);
+  async fetchRange(brand, start, end): Promise<MetricSet> {
+    const json = await overall(brand, start, end);
     const s = pick(json, "summary") as any;
     if (!s) return {};
     const mtm = (pick(s, "messageTypeMetrics") as any[]) || [];
@@ -37,8 +37,8 @@ export const smsAdapter: ChannelAdapter = {
       unsubscribed: num(pick(s, "unsubscribers.count")),
     };
   },
-  async fetchCampaigns(start, end): Promise<CampaignRow[]> {
-    const json = await overall(start, end);
+  async fetchCampaigns(brand, start, end): Promise<CampaignRow[]> {
+    const json = await overall(brand, start, end);
     const detail: any[] = (pick(json, "detail") as any[]) || [];
     return detail.map((d) => ({
       name: String(d.campaignName || d.campaignId || "—"),

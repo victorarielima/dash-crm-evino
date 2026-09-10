@@ -1,14 +1,29 @@
-# IACRM — Dashboard Insider (Evino)
+# IACRM — Dashboard Insider (Evino / Grand Cru)
 
 Dashboard de analytics multicanal integrado à **Insider One**, feito para rodar **100% na Vercel**.
-O usuário escolhe **canal** + **período**, o app consulta a Insider por um proxy serverless
+O usuário escolhe **conta** + **canal** + **período**, o app consulta a Insider por um proxy serverless
 (as chaves ficam só no servidor) e renderiza **KPIs + série temporal + heatmap-calendário**.
+
+## Contas (Evino / Grand Cru)
+
+O seletor no topo da sidebar troca a conta ativa. A escolha fica salva no navegador
+(`localStorage: iacrm-brand`) e vale para o dashboard e para o chat de IA. Trocar de conta muda:
+
+- a **logo** da sidebar;
+- a **conta Insider** consultada (cada marca tem seu próprio conjunto de chaves — ver `.env.example`);
+- as **tabelas do Redshift** de receita/conversões/garrafas (`ev_*` para Evino, `gc_*` para Grand Cru).
+
+> Não há fallback de credenciais entre as contas: se as variáveis `INSIDER_GC_*` não estiverem
+> preenchidas, a conta Grand Cru mostra erro explícito em vez de exibir dados da Evino.
+>
+> Em Grand Cru, **garrafas** são contadas por item de pedido — `gc_fact_order_item` não expõe
+> quantidade por item. O dashboard exibe esse aviso junto dos dados.
 
 ## Stack
 
 - **Next.js 14** (App Router) + **TypeScript**
 - **Recharts** (série temporal)
-- Tema **Evino** em modo claro (`src/app/globals.css`)
+- Tema corporativo em modo claro, com a marca Evino como acento (`src/app/globals.css`)
 
 ## Canais
 
@@ -27,7 +42,7 @@ O usuário escolhe **canal** + **período**, o app consulta a Insider por um pro
 
 ```bash
 npm install
-cp .env.example .env   # e preencha INSIDER_API_KEY
+cp .env.example .env   # preencha INSIDER_API_KEY (Evino) e INSIDER_GC_API_KEY (Grand Cru)
 npm run dev            # http://localhost:3000
 ```
 
@@ -47,3 +62,7 @@ npm run dev            # http://localhost:3000
 
 Arquitetura: `src/lib/insider/` (adapters por canal + dispatcher), `src/app/api/analytics/` (rota),
 `src/components/` (charts), `src/app/page.tsx` (UI).
+
+Conta ativa: `src/lib/brands.ts` (catálogo client-safe: rótulo + logos),
+`src/components/BrandContext.tsx` (estado compartilhado e persistido),
+`src/lib/insider/env.ts` (chaves por conta) e `src/lib/redshiftRevenue.ts` (tabelas por conta).

@@ -1,7 +1,7 @@
-import { insiderEnv, InsiderError } from "../env";
+import { insiderEnv } from "../env";
 import { hourOfEpoch, isoDay } from "../periods";
 import { insiderFetch, num, pick } from "../http";
-import type { CampaignRow, MetricSet } from "../types";
+import type { BrandId, CampaignRow, MetricSet } from "../types";
 import { M, type ChannelAdapter } from "./base";
 
 const BASE = "https://web-push.api.useinsider.com";
@@ -34,10 +34,9 @@ type Overall = { metrics: MetricSet; rows: CampaignRow[] };
 const cache = new Map<string, { t: number; p: Promise<Overall> }>();
 const TTL = 60_000;
 
-async function fetchOverall(start: Date, end: Date): Promise<Overall> {
-  const partnerId = insiderEnv.webpushPartnerId();
-  if (!partnerId) throw new InsiderError("INSIDER_WEBPUSH_PARTNER_ID não configurado.");
-  const key = `${start.getTime()}-${end.getTime()}`;
+async function fetchOverall(brand: BrandId, start: Date, end: Date): Promise<Overall> {
+  const partnerId = insiderEnv.webpushPartnerId(brand);
+  const key = `${brand}-${start.getTime()}-${end.getTime()}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.t < TTL) return hit.p;
 
@@ -47,7 +46,7 @@ async function fetchOverall(start: Date, end: Date): Promise<Overall> {
       const json = await insiderFetch(`${BASE}/v1/statistics/overall-metrics`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${insiderEnv.webpushKey()}`,
+          Authorization: `Bearer ${insiderEnv.webpushKey(brand)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -95,10 +94,10 @@ export const webpushAdapter: ChannelAdapter = {
   primary: "revenue",
   supportsHistory: true,
   note: "Rate limit de 30 req/min: períodos longos são agregados por semana.",
-  async fetchRange(start, end): Promise<MetricSet> {
-    return (await fetchOverall(start, end)).metrics;
+  async fetchRange(brand, start, end): Promise<MetricSet> {
+    return (await fetchOverall(brand, start, end)).metrics;
   },
-  async fetchCampaigns(start, end): Promise<CampaignRow[]> {
-    return (await fetchOverall(start, end)).rows;
+  async fetchCampaigns(brand, start, end): Promise<CampaignRow[]> {
+    return (await fetchOverall(brand, start, end)).rows;
   },
 };

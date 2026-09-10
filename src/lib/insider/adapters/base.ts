@@ -1,4 +1,4 @@
-import type { CampaignRow, ChannelId, IspRow, MetricDef, MetricKey, MetricSet } from "../types";
+import type { BrandId, CampaignRow, ChannelId, IspRow, MetricDef, MetricKey, MetricSet } from "../types";
 
 export interface ChannelAdapter {
   id: ChannelId;
@@ -8,12 +8,12 @@ export interface ChannelAdapter {
   supportsHistory: boolean;
   /** Aviso fixo exibido na UI (ex.: limitação do App Push). */
   note?: string;
-  /** Agrega métricas do canal para um intervalo [start, end]. */
-  fetchRange(start: Date, end: Date): Promise<MetricSet>;
+  /** Agrega métricas do canal para um intervalo [start, end], na conta da marca. */
+  fetchRange(brand: BrandId, start: Date, end: Date): Promise<MetricSet>;
   /** Lista campanhas do período com indicadores por campanha (opcional). */
-  fetchCampaigns?(start: Date, end: Date): Promise<CampaignRow[]>;
+  fetchCampaigns?(brand: BrandId, start: Date, end: Date): Promise<CampaignRow[]>;
   /** Quebra por provedor de e-mail (ISP) agregada no período (opcional; só Email). */
-  fetchIsp?(start: Date, end: Date): Promise<IspRow[]>;
+  fetchIsp?(brand: BrandId, start: Date, end: Date): Promise<IspRow[]>;
 }
 
 // Conjuntos de métricas por tipo de card, reaproveitados pelos adapters.

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { useBrand } from "@/components/BrandContext";
 import { CHANNELS, PERIODS } from "@/lib/catalog";
 import type { ChannelId, PeriodId } from "@/lib/insider/types";
 import { IconAI, IconPlus, IconSend, IconCalendar } from "@/components/icons";
@@ -61,6 +62,7 @@ function renderMarkdown(text: string) {
 }
 
 export default function ChatPage() {
+  const { brand, def: brandInfo } = useBrand();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -92,6 +94,10 @@ export default function ChatPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
+  // Trocar de conta invalida o foco de canal/campanha (campanhas são de outra conta).
+  useEffect(() => {
+    setCtx((c) => ({ period: c.period }));
+  }, [brand]);
   // fecha o popover ao clicar fora
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -134,7 +140,7 @@ export default function ChatPage() {
     setCampaignsLoading(true);
     setCampaigns([]);
     try {
-      const res = await fetch(`/api/analytics?channel=${ch}&period=${period}`);
+      const res = await fetch(`/api/analytics?brand=${brand}&channel=${ch}&period=${period}`);
       const data = await res.json();
       const names: string[] = (data.campaigns || []).map((c: { name: string }) => c.name).filter(Boolean);
       setCampaigns(names);
@@ -164,10 +170,13 @@ export default function ChatPage() {
   }
 
   const chipLabel = useMemo(() => {
-    if (!ctx.channel) return "Análise geral (todos os canais)";
+    const account = brandInfo.label;
+    if (!ctx.channel) return `${account} · análise geral (todos os canais)`;
     const label = CHANNELS.find((c) => c.id === ctx.channel)?.label ?? ctx.channel;
-    return ctx.campaignName ? `${label} · ${ctx.campaignName}` : `${label} · visão do canal`;
-  }, [ctx]);
+    return ctx.campaignName
+      ? `${account} · ${label} · ${ctx.campaignName}`
+      : `${account} · ${label} · visão do canal`;
+  }, [ctx, brandInfo.label]);
 
   async function send() {
     const text = input.trim();
@@ -182,7 +191,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           conversationId,
           message: text,
-          context: { channel: ctx.channel, campaignName: ctx.campaignName, period: ctx.period },
+          context: { brand, channel: ctx.channel, campaignName: ctx.campaignName, period: ctx.period },
         }),
       });
       const data = await res.json();

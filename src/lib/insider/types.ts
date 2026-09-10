@@ -2,6 +2,9 @@
 
 export type ChannelId = "email" | "sms" | "whatsapp" | "webpush" | "apppush";
 
+/** Conta/marca consultada: cada uma tem sua conta Insider e suas tabelas no DW. */
+export type BrandId = "evino" | "grandcru";
+
 export type PeriodId = "year" | "30d" | "15d" | "7d" | "2d" | "today" | "custom";
 
 export type MetricKey =
@@ -59,6 +62,8 @@ export interface IspRow {
 }
 
 export interface AnalyticsResult {
+  brand: BrandId;
+  brandLabel: string;
   channel: ChannelId;
   channelLabel: string;
   range: { start: string; end: string };

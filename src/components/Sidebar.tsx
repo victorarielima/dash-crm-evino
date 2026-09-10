@@ -2,6 +2,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { BRANDS } from "@/lib/brands";
+import type { BrandId } from "@/lib/insider/types";
+import { useBrand } from "./BrandContext";
 import { IconDashboard, IconAI } from "./icons";
 
 type SidebarProps = {
@@ -11,6 +14,7 @@ type SidebarProps = {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { data: session } = useSession();
+  const { brand, def: brandInfo, setBrand } = useBrand();
   const pathname = usePathname();
   const email = session?.user?.email ?? undefined;
   const name = session?.user?.name ?? email?.split("@")[0] ?? "Usuário";
@@ -22,12 +26,34 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="sb-brand">
           {collapsed ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img className="sb-mark" src="/logo-reduzida.png" alt="Evino" />
+            <img className="sb-mark" src={brandInfo.mark} alt={brandInfo.label} />
           ) : (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img className="sb-wordmark" src="/evino-logo.png" alt="Evino" style={{ height: 24, width: "auto" }} />
+            <img
+              className="sb-wordmark"
+              src={brandInfo.wordmark}
+              alt={brandInfo.label}
+              style={{ height: 24, width: "auto" }}
+            />
           )}
         </div>
+
+        {/* Seletor de conta: troca a logo e a conta Insider/Redshift consultada. */}
+        <label className={"sb-account" + (collapsed ? " is-collapsed" : "")}>
+          <span className="sr-only">Conta</span>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value as BrandId)}
+            aria-label="Conta"
+            title={`Conta: ${brandInfo.label}`}
+          >
+            {BRANDS.map((b) => (
+              <option key={b.id} value={b.id}>
+                {collapsed ? b.short : b.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <nav className="sb-nav">

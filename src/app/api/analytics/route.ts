@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runQuery } from "@/lib/insider";
+import { DEFAULT_BRAND, isBrandId } from "@/lib/brands";
 import type { ChannelId, PeriodId } from "@/lib/insider/types";
 
 export const runtime = "nodejs";
@@ -11,10 +12,17 @@ const PERIODS: PeriodId[] = ["year", "30d", "15d", "7d", "2d", "today", "custom"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+  const brandParam = searchParams.get("brand");
   const channel = searchParams.get("channel") as ChannelId | null;
   const period = searchParams.get("period") as PeriodId | null;
   const start = searchParams.get("start") || undefined;
   const end = searchParams.get("end") || undefined;
+
+  // brand ausente = Evino (retrocompatível com chamadas antigas).
+  if (brandParam !== null && !isBrandId(brandParam)) {
+    return NextResponse.json({ ok: false, error: "Conta inválida." }, { status: 400 });
+  }
+  const brand = isBrandId(brandParam) ? brandParam : DEFAULT_BRAND;
 
   if (!channel || !CHANNELS.includes(channel)) {
     return NextResponse.json({ ok: false, error: "Canal inválido." }, { status: 400 });
@@ -24,7 +32,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const result = await runQuery(channel, period, start, end);
+    const result = await runQuery(brand, channel, period, start, end);
     return NextResponse.json(result, {
       headers: { "Cache-Control": "no-store" },
     });

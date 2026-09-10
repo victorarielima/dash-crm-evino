@@ -8,7 +8,8 @@ import {
   getMessages,
   touchConversation,
 } from "@/lib/ai/store";
-import type { ChannelId, PeriodId } from "@/lib/insider/types";
+import { BRAND_LABEL, DEFAULT_BRAND, isBrandId } from "@/lib/brands";
+import type { BrandId, ChannelId, PeriodId } from "@/lib/insider/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -19,7 +20,7 @@ const CHANNELS: ChannelId[] = ["email", "sms", "whatsapp", "webpush", "apppush"]
 interface Body {
   conversationId?: string;
   message?: string;
-  context?: { channel?: ChannelId; period?: PeriodId; campaignName?: string };
+  context?: { brand?: BrandId; channel?: ChannelId; period?: PeriodId; campaignName?: string };
 }
 
 export async function POST(req: Request) {
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Canal inválido." }, { status: 400 });
   }
 
+  const rawBrand = body.context?.brand;
+  if (rawBrand !== undefined && !isBrandId(rawBrand)) {
+    return NextResponse.json({ ok: false, error: "Conta inválida." }, { status: 400 });
+  }
+  const brand = isBrandId(rawBrand) ? rawBrand : DEFAULT_BRAND;
+  // O agente precisa saber de qual conta são os dados (contas Insider distintas).
+  const context = { ...(body.context ?? {}), brand, brandLabel: BRAND_LABEL[brand] };
+
   try {
     // 1) conversa (nova ou existente, sempre do próprio usuário)
     let conv: { id: string; title: string };
@@ -63,11 +72,11 @@ export async function POST(req: Request) {
       userEmail: session?.user?.email ?? null,
       message,
       history,
-      context: body.context ?? null,
+      context,
     });
 
     // 3) persiste (usuário + resposta) e atualiza a conversa
-    await appendMessage(conv.id, "user", message, body.context ?? null);
+    await appendMessage(conv.id, "user", message, context);
     await appendMessage(conv.id, "assistant", reply);
     await touchConversation(conv.id);
 

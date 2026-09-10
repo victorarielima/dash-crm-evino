@@ -1,7 +1,7 @@
 import { insiderEnv } from "../env";
 import { epochSec, hourOfEpoch } from "../periods";
 import { insiderFetch, num, pick } from "../http";
-import type { CampaignRow, MetricSet } from "../types";
+import type { BrandId, CampaignRow, MetricSet } from "../types";
 import { M, type ChannelAdapter } from "./base";
 
 const BASE = "https://whatsapp.useinsider.com";
@@ -22,8 +22,8 @@ type Overall = { metrics: MetricSet; rows: CampaignRow[] };
 const cache = new Map<string, { t: number; p: Promise<Overall> }>();
 const TTL = 60_000;
 
-async function fetchOverall(start: Date, end: Date): Promise<Overall> {
-  const key = `${start.getTime()}-${end.getTime()}`;
+async function fetchOverall(brand: BrandId, start: Date, end: Date): Promise<Overall> {
+  const key = `${brand}-${start.getTime()}-${end.getTime()}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.t < TTL) return hit.p;
 
@@ -32,7 +32,7 @@ async function fetchOverall(start: Date, end: Date): Promise<Overall> {
     // (show_architect default false).
     const json = await insiderFetch(`${BASE}/v1/statistics/overall`, {
       method: "POST",
-      headers: { "x-ins-auth-key": insiderEnv.whatsappKey(), "Content-Type": "application/json" },
+      headers: { "x-ins-auth-key": insiderEnv.whatsappKey(brand), "Content-Type": "application/json" },
       body: JSON.stringify({ start_time: epochSec(start), end_time: epochSec(end) }),
     });
 
@@ -59,10 +59,10 @@ export const whatsappAdapter: ChannelAdapter = {
   metrics: [M.sent, M.delivered, M.clicked, M.converted, M.revenue, M.bottles],
   primary: "revenue",
   supportsHistory: true,
-  async fetchRange(start, end): Promise<MetricSet> {
-    return (await fetchOverall(start, end)).metrics;
+  async fetchRange(brand, start, end): Promise<MetricSet> {
+    return (await fetchOverall(brand, start, end)).metrics;
   },
-  async fetchCampaigns(start, end): Promise<CampaignRow[]> {
-    return (await fetchOverall(start, end)).rows;
+  async fetchCampaigns(brand, start, end): Promise<CampaignRow[]> {
+    return (await fetchOverall(brand, start, end)).rows;
   },
 };
