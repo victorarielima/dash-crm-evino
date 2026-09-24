@@ -31,7 +31,10 @@ export default function Page() {
   const [metric, setMetric] = useState<MetricKey | null>(null);
   const [purchaseMetric, setPurchaseMetric] = useState<MetricKey>("revenue");
   const [exporting, setExporting] = useState(false);
-  const [exportMsg, setExportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [exportResults, setExportResults] = useState<
+    { channel: string; tab: string; ok: boolean; appended?: number; error?: string }[] | null
+  >(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("iacrm-sidebar-collapsed");
@@ -105,29 +108,23 @@ export default function Page() {
     if (period === "custom") run({ pdArg: "custom", startArg: customStart, endArg: next });
   }
 
+  // Sempre exporta TODOS os canais de uma vez, com período "este ano".
   async function exportSheet() {
     if (exporting) return;
     setExporting(true);
-    setExportMsg(null);
+    setExportResults(null);
+    setExportError(null);
     try {
-      const payload: Record<string, string> = { brand, channel, period };
-      if (period === "custom") {
-        payload.start = customStart;
-        payload.end = customEnd;
-      }
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ brand, period: "year" }),
       });
       const data = await res.json();
-      setExportMsg(
-        data.ok
-          ? { ok: true, text: `${data.appended} campanha(s) exportada(s) para a aba ${data.tab}.` }
-          : { ok: false, text: data.error || "Falha ao exportar." },
-      );
+      if (Array.isArray(data.results)) setExportResults(data.results);
+      else setExportError(data.error || "Falha ao exportar.");
     } catch (e: any) {
-      setExportMsg({ ok: false, text: e?.message || "Falha ao exportar." });
+      setExportError(e?.message || "Falha ao exportar.");
     } finally {
       setExporting(false);
     }
@@ -174,8 +171,8 @@ export default function Page() {
             <button
               className="export-btn"
               onClick={exportSheet}
-              disabled={exporting || !(result?.ok && result.campaigns.length > 0)}
-              title="Exportar as campanhas para a planilha CRM"
+              disabled={exporting}
+              title="Exportar todos os canais (este ano) para a planilha CRM"
             >
               <IconExport size={16} className={exporting ? "spin" : undefined} />
               {exporting ? "Exportando…" : "Exportar"}
@@ -183,8 +180,23 @@ export default function Page() {
           </div>
         </div>
 
-        {exportMsg && (
-          <div className={"note" + (exportMsg.ok ? " ok" : " err")}>{exportMsg.text}</div>
+        {exportError && <div className="note err">{exportError}</div>}
+        {exportResults && (
+          <div className="export-results">
+            <div className="export-results-title">Exportação (este ano) → planilha CRM</div>
+            {exportResults.map((r) => {
+              const label = CHANNELS.find((c) => c.id === r.channel)?.label ?? r.channel;
+              return (
+                <div key={r.channel} className={"export-row" + (r.ok ? " ok" : " err")}>
+                  <span className="export-ch">{label}</span>
+                  <span className="export-tab">{r.tab}</span>
+                  <span className="export-stat">
+                    {r.ok ? `${r.appended ?? 0} linha(s) anexada(s)` : r.error}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {period === "custom" && (

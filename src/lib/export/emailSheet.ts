@@ -14,8 +14,8 @@ import { pool } from "@/lib/insider/pool";
 import type { BrandId } from "@/lib/insider/types";
 
 const BASE = "https://analytics.api.useinsider.com";
-const MAX_PAGES = 8; // até 800 campanhas varridas
-const MAX_CAMPAIGNS = 300; // teto de chamadas de statistics
+const MAX_PAGES = 10; // até 1000 campanhas varridas
+const MAX_CAMPAIGNS = 500; // teto de chamadas de statistics (period longo → mais recentes)
 
 type Cell = string | number;
 
@@ -96,9 +96,9 @@ export async function buildEmailRows(brand: BrandId, start: Date, end: Date): Pr
     if (last && page >= last) break;
   }
 
-  // cronológico (mais antigo primeiro), como a planilha
-  meta.sort((a, b) => a.launch.getTime() - b.launch.getTime());
-  const capped = meta.slice(0, MAX_CAMPAIGNS);
+  // pega as MAIS RECENTES (teto), depois volta a cronológico p/ a planilha
+  meta.sort((a, b) => b.launch.getTime() - a.launch.getTime());
+  const capped = meta.slice(0, MAX_CAMPAIGNS).sort((a, b) => a.launch.getTime() - b.launch.getTime());
   const startEpoch = epochSec(start);
 
   const rows = await pool(capped, 4, async (c): Promise<Cell[]> => {

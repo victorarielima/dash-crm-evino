@@ -497,6 +497,54 @@ button {
 .note.ok::before {
   background: var(--positive);
 }
+.export-results {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 22px;
+}
+.export-results-title {
+  font-family: var(--font-cond);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.export-row {
+  display: grid;
+  grid-template-columns: 110px 120px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.export-ch {
+  font-weight: 700;
+  color: var(--text);
+}
+.export-tab {
+  font-family: var(--font-cond);
+  color: var(--muted);
+  font-size: 12px;
+}
+.export-row.ok .export-stat {
+  color: var(--positive);
+  font-weight: 600;
+}
+.export-row.err .export-stat {
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .export-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
 
 /* ---------------- Channel tabs ---------------- */
 .channel-tabs {
