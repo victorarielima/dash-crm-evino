@@ -5,7 +5,7 @@ import type { AnalyticsResult, BrandId, ChannelId, MetricKey, PeriodId } from "@
 import { formatValue } from "@/lib/format";
 import Sidebar from "@/components/Sidebar";
 import { useBrand } from "@/components/BrandContext";
-import { IconCalendar } from "@/components/icons";
+import { IconCalendar, IconExport } from "@/components/icons";
 import KpiCards from "@/components/KpiCards";
 import TrendChart from "@/components/TrendChart";
 import CampaignTable from "@/components/CampaignTable";
@@ -30,6 +30,8 @@ export default function Page() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [metric, setMetric] = useState<MetricKey | null>(null);
   const [purchaseMetric, setPurchaseMetric] = useState<MetricKey>("revenue");
+  const [exporting, setExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("iacrm-sidebar-collapsed");
@@ -103,6 +105,34 @@ export default function Page() {
     if (period === "custom") run({ pdArg: "custom", startArg: customStart, endArg: next });
   }
 
+  async function exportSheet() {
+    if (exporting) return;
+    setExporting(true);
+    setExportMsg(null);
+    try {
+      const payload: Record<string, string> = { brand, channel, period };
+      if (period === "custom") {
+        payload.start = customStart;
+        payload.end = customEnd;
+      }
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setExportMsg(
+        data.ok
+          ? { ok: true, text: `${data.appended} campanha(s) exportada(s) para a aba ${data.tab}.` }
+          : { ok: false, text: data.error || "Falha ao exportar." },
+      );
+    } catch (e: any) {
+      setExportMsg({ ok: false, text: e?.message || "Falha ao exportar." });
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const activeMetric = useMemo<MetricKey | null>(() => {
     if (!result) return null;
     if (metric && result.metrics.some((m) => m.key === metric)) return metric;
@@ -141,8 +171,21 @@ export default function Page() {
                 ))}
               </select>
             </div>
+            <button
+              className="export-btn"
+              onClick={exportSheet}
+              disabled={exporting || !(result?.ok && result.campaigns.length > 0)}
+              title="Exportar as campanhas para a planilha CRM"
+            >
+              <IconExport size={16} className={exporting ? "spin" : undefined} />
+              {exporting ? "Exportando…" : "Exportar"}
+            </button>
           </div>
         </div>
+
+        {exportMsg && (
+          <div className={"note" + (exportMsg.ok ? " ok" : " err")}>{exportMsg.text}</div>
+        )}
 
         {period === "custom" && (
           <div className="custom-range">

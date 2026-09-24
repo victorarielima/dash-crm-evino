@@ -97,3 +97,10 @@ export const IconSend = ({ size, ...p }: P) => (
     <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
   </svg>
 );
+export const IconExport = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 3v12" />
+    <path d="M8 7l4-4 4 4" />
+    <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+  </svg>
+);

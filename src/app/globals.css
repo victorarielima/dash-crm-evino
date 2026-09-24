@@ -16,6 +16,7 @@
   --text-2: #40474f;
   --muted: #79828d;
   --brand: var(--evino-red);
+  --brand-hover: var(--evino-red-hover);
   --brand-contrast: #ffffff;
   --brand-soft: #fdecef;
   --positive: #12805c;
@@ -462,6 +463,39 @@ button {
 }
 .refresh svg.spin {
   animation: spin 0.7s linear infinite;
+}
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: var(--r-btn);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--brand-contrast);
+  cursor: pointer;
+  transition: 0.14s;
+}
+.export-btn:hover:not(:disabled) {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.export-btn svg.spin {
+  animation: spin 0.7s linear infinite;
+}
+.note.ok {
+  border-left-color: var(--positive);
+  color: var(--positive);
+}
+.note.ok::before {
+  background: var(--positive);
 }
 
 /* ---------------- Channel tabs ---------------- */
