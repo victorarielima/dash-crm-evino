@@ -5,6 +5,7 @@ import type { BrandId, ChannelId } from "@/lib/insider/types";
 import { buildEmailRows } from "./emailSheet";
 import { buildSmsRows } from "./smsSheet";
 import { buildWebpushRows } from "./webpushSheet";
+import { buildWhatsappRows } from "./whatsappSheet";
 
 type Cell = string | number;
 
@@ -27,14 +28,12 @@ export const CHANNEL_EXPORTS: Record<ChannelId, ChannelExport> = {
   email: { tab: "insider_News", gid: 337976544, lastCol: "AB", dateCols: [1], dateCell: "C1", build: buildEmailRows },
   sms: { tab: "insider_SMS", gid: 792848495, lastCol: "AK", dateCols: [35, 36], build: buildSmsRows },
   webpush: { tab: "insider_WebPush", gid: 2070895140, lastCol: "W", dateCols: [14, 15], build: buildWebpushRows },
-  whatsapp: {
-    tab: "insider_Whats",
-    reason: "WhatsApp na planilha são broadcasts com as 54 métricas do Meta — fonte diferente das jornadas do dashboard; integração ainda não disponível.",
-  },
+  whatsapp: { tab: "insider_Whats", gid: 609546471, lastCol: "BB", dateCols: [52, 53], build: buildWhatsappRows },
   apppush: {
     tab: "insider_AppPush",
-    reason: "App Push detalhado por variante não é exposto pela API (get_statistics cobre só o dia atual) — histórico 'este ano' indisponível.",
+    reason: "App Push — exportação desativada (a API só expõe o dia atual).",
   },
 };
 
-export const EXPORT_ORDER: ChannelId[] = ["email", "sms", "webpush", "whatsapp", "apppush"];
+// App Push fora do export (a API só dá o dia atual). WhatsApp incluído.
+export const EXPORT_ORDER: ChannelId[] = ["email", "sms", "webpush", "whatsapp"];

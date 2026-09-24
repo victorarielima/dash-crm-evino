@@ -11,8 +11,8 @@ import { isoDay } from "@/lib/insider/periods";
 import type { BrandId } from "@/lib/insider/types";
 
 const URL = "https://web-push.api.useinsider.com/v1/statistics/overall-metrics";
-const PER_PAGE = 50; // mínimo do endpoint é 10
-const MAX_PAGES = 20;
+const PER_PAGE = 20; // endpoint exige entre 10 e 20
+const MAX_PAGES = 60;
 
 type Cell = string | number;
 
