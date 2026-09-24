@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveRange } from "@/lib/insider/periods";
-import { appendRows, setCell, serviceAccountEmail } from "@/lib/sheets";
+import { replaceData, serviceAccountEmail } from "@/lib/sheets";
 import { CHANNEL_EXPORTS, EXPORT_ORDER } from "@/lib/export/registry";
 import type { BrandId, PeriodId } from "@/lib/insider/types";
 
@@ -44,14 +44,15 @@ export async function POST(req: Request) {
     }
     try {
       const rows = await def.build(brand, range.start, range.end);
-      const appended = rows.length ? await appendRows(def.tab, rows) : 0;
-      if (appended && def.dateCell) {
-        try {
-          await setCell(`${def.tab}!${def.dateCell}`, todayBR());
-        } catch {
-          /* não crítico */
-        }
-      }
+      const appended = await replaceData({
+        tab: def.tab,
+        gid: def.gid!,
+        lastCol: def.lastCol!,
+        dateCols: def.dateCols ?? [],
+        rows,
+        dateCell: def.dateCell,
+        dateValue: todayBR(),
+      });
       results.push({ channel, tab: def.tab, ok: true, appended });
     } catch (e: any) {
       results.push({ channel, tab: def.tab, ok: false, error: e?.message || "Falha ao exportar." });

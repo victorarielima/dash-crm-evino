@@ -191,7 +191,11 @@ export default function Page() {
                   <span className="export-ch">{label}</span>
                   <span className="export-tab">{r.tab}</span>
                   <span className="export-stat">
-                    {r.ok ? `${r.appended ?? 0} linha(s) anexada(s)` : r.error}
+                    {r.ok
+                      ? (r.appended ?? 0) > 0
+                        ? `${r.appended} linha(s) substituída(s)`
+                        : "sem campanhas no período (aba mantida)"
+                      : r.error}
                   </span>
                 </div>
               );
